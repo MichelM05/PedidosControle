@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchPedidoRequest;
+use App\Http\Requests\SavePedidoRequest;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Helpers\UtilsNormalizarNumero;
 use App\Services\PedidoUploadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Smalot\PdfParser\Parser;
 
 class PedidoController extends Controller
@@ -27,13 +29,53 @@ class PedidoController extends Controller
 
     public function create()
     {
-        return view('pedidos.create');
+        $pedido = new Pedido();
+        return view('pedidos.create', compact('pedido'));
     }
 
-    public function save(Request $request)
+    public function edit(Pedido $pedido)
     {
-        // Aqui virá a lógica de salvar que vamos aprender depois
-        return "Salvando o pedido...";
+        $pedido->load('itens');
+        return view('pedidos.edit', compact('pedido'));
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function save(SavePedidoRequest $request, $id = null)
+    {
+        $dadosValidados = $request->validated();
+
+        return DB::transaction(function () use ($request, $id, $dadosValidados) {
+
+            //Buscar ou Criar o Pedido
+            $pedido = $id ? Pedido::findOrFail($id) : new Pedido();
+
+            $pedido->fill($dadosValidados);
+            $pedido->save();
+
+            //Lógica de Itens (Sincronização)
+            if ($request->has('itens')) {
+                // Se for uma edição, uma estratégia simples é remover os antigos e salvar os novos
+                if ($id) {
+                    $pedido->itens()->delete();
+                }
+
+                foreach ($request->itens as $itemDados) {
+                    $pedido->itens()->create($itemDados);
+                }
+            }
+
+            $mensagem = $id ? 'Pedido atualizado com sucesso!' : 'Pedido criado com sucesso!';
+            return redirect()->route('pedidos.show', compact('pedido'))->with('success', $mensagem);
+        });
+    }
+
+    public function delete(Pedido $pedido)
+    {
+        $pedido->delete();
+
+        return redirect()->route('pedidos.index')->with('success', 'Pedido excluído com sucesso!');
     }
 
     public function upload(Request $request, PedidoUploadService $service)
@@ -46,13 +88,5 @@ class PedidoController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['pdf' => 'Erro ao processar: ' . $e->getMessage()]);
         }
-    }
-
-    public function delete(Pedido $pedido)
-    {
-        $pedido->delete();
-
-        // Redireciona de volta com uma mensagem de sucesso
-        return redirect()->route('pedidos.index')->with('success', 'Pedido excluído com sucesso!');
     }
 }

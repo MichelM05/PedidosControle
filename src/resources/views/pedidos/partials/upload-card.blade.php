@@ -33,7 +33,7 @@
 
             <a href="{{ route('pedidos.create') }}" class="upload-submit-btn"
                style="background-color: rgba(255,255,255,0.2); text-decoration: none;">
-                Criar Manual
+                Criar Pedido
             </a>
         </div>
 

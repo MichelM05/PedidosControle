@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Criar Pedido')
+@section('title', 'Editar Pedido')
 
 @section('content')
     @include('pedidos.form')

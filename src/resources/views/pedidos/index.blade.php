@@ -57,6 +57,10 @@
                                     Ver detalhes
                                 </a>
 
+                                <a href="{{ route('pedidos.edit', $pedido) }}" class="btn btn-actions">
+                                    Editar
+                                </a>
+
                                 <form action="{{ route('pedidos.delete', $pedido) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
