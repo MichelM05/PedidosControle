@@ -33,6 +33,7 @@ class PedidoItem extends Model
         'andamento' => 'Andamento',
         'finalizado' => 'Finalizado',
         'entregue' => 'Entregue',
+        'cancelado' => 'Cancelado',
     ];
 
     /** Campos preenchidos pela equipe (não vêm do PDF): ficam fora do parser e do pedidos:reextrair. */

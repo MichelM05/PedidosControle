@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AtualizarControleItemRequest;
+use App\Http\Requests\AtualizarStatusPedidoRequest;
 use App\Http\Requests\FiltroControleRequest;
 use App\Http\Resources\ControleLinhaResource;
 use App\Models\Pedido;
@@ -36,13 +37,8 @@ class ControleController extends Controller
             'colunas' => ColunasControle::lista(),
             'status' => PedidoItem::STATUS,
             'responsaveis' => $this->controle->responsaveis(),
-            'diasAlerta' => ColunasControle::DIAS_ALERTA,
-            'cores' => [
-                'linha' => ColunasControle::COR_LINHA,
-                'entregue' => ColunasControle::COR_ENTREGUE,
-                'finalizado' => ColunasControle::COR_FINALIZADO,
-                'prazo' => ColunasControle::COR_PRAZO,
-            ],
+            'prazos' => ColunasControle::prazos(),
+            'cores' => ColunasControle::cores(),
         ]);
     }
 
@@ -65,13 +61,12 @@ class ControleController extends Controller
         return $this->baixar($abas, $ano ? "controle-de-pedidos-$ano.xlsx" : 'controle-de-pedidos.xlsx');
     }
 
-    /** Planilha com os itens de um único pedido (na aba do ano dele). */
-    public function exportarPedido(Pedido $pedido): StreamedResponse
+    /** Muda o status de todos os itens de um pedido de uma vez (ex.: marcar o pedido inteiro como entregue). */
+    public function atualizarStatusPedido(AtualizarStatusPedidoRequest $request, Pedido $pedido)
     {
-        return $this->baixar(
-            [$pedido->anoDoControle() => $this->controle->itensDoPedido($pedido)],
-            'pedido-'.preg_replace('/[^\w.-]+/u', '-', (string) ($pedido->numero ?? $pedido->id)).'.xlsx',
-        );
+        $pedido->itens()->update(['status' => $request->validated('status')]);
+
+        return back()->with('success', 'Status de todos os itens atualizado.');
     }
 
     private function baixar(array $abas, string $arquivo): StreamedResponse

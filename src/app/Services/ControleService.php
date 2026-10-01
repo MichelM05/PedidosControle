@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Pedido;
 use App\Models\PedidoItem;
+use App\Support\ColunasControle;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -30,12 +31,6 @@ class ControleService
         return $this->consulta($ano, $filtros)->get();
     }
 
-    /** Itens de um único pedido, no mesmo formato do ano. */
-    public function itensDoPedido(Pedido $pedido): Collection
-    {
-        return PedidoItem::with('pedido')->where('pedido_id', $pedido->id)->orderBy('id')->get();
-    }
-
     /** Responsáveis já usados (para o filtro). */
     public function responsaveis(): Collection
     {
@@ -55,7 +50,7 @@ class ControleService
                 ->orWhereHas('pedido', fn ($p) => $p->where('numero', 'like', "%$q%")->orWhere('cliente', 'like', "%$q%"))))
             ->when(! empty($filtros['status']), fn ($query) => $query->where('status', $filtros['status']))
             ->when(! empty($filtros['responsavel']), fn ($query) => $query->whereRaw('lower(responsavel) = ?', [mb_strtolower($filtros['responsavel'])]))
-            ->when(! empty($filtros['ocultar_entregues']), fn ($query) => $query->where('status', '!=', 'entregue'))
+            ->when(! empty($filtros['ocultar_entregues']), fn ($query) => $query->whereNotIn('status', ColunasControle::STATUS_ENCERRADOS))
             ->orderByRaw('dt_entrega is null')->orderBy('dt_entrega')->orderBy('id');
     }
 }

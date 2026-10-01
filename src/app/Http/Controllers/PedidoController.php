@@ -11,6 +11,7 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Services\PedidoService;
 use App\Services\PedidoUploadService;
+use App\Support\ColunasControle;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Throwable;
@@ -27,6 +28,9 @@ class PedidoController extends Controller
             'pedidos' => Pedido::search($filtros)->paginate(15)->withQueryString()
                 ->through(fn (Pedido $pedido) => PedidoResource::make($pedido)->resolve()),
             'filtros' => (object) $filtros,
+            'status' => PedidoItem::STATUS,
+            'cores' => ColunasControle::cores(),
+            'prazos' => ColunasControle::prazos(),
         ]);
     }
 

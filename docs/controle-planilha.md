@@ -18,37 +18,47 @@ Definidas em um só lugar, `app/Support/ColunasControle.php`, usado pela tela e 
 | CIDADE ENTREGA | local da prestação sem a UF | preenchida na importação ("Ponta Grossa PR" → "Ponta Grossa"); editável em "Editar controle" |
 | DESENHO NESTING, COMPRA M.P, COMPRA INSUMO, USINAGEM, CORTE E/OU DOBRA, SOLDA, PINTURA, MONTAGEM | **controle interno** (não vem do PDF) | texto livre ou data: "recebido 02/09", "12/03/2026", "xxxxx" |
 | RESPONSÁVEL | controle interno | texto |
-| STATUS | controle interno | Andamento, Finalizado ou Entregue (padrão: Andamento) |
+| STATUS | controle interno | Andamento, Finalizado, Entregue ou Cancelado (padrão: Andamento) |
 
 Os campos de controle ficam em `pedido_itens` (`PedidoItem::CAMPOS_CONTROLE`). O parser e o `pedidos:reextrair`
 **não tocam neles**, então reimportar ou reextrair nunca apaga o que a equipe preencheu.
 
-## Cores das linhas
+## Status e cores
 
-Mesmas cores da planilha, na tela e no `.xlsx`:
+Status do item: **Andamento**, **Finalizado**, **Entregue** e **Cancelado** (`PedidoItem::STATUS`). Na tela do pedido dá para mudar o
+status de um item (seletor no item) ou de **todos os itens de uma vez** ("Status do pedido").
+
+As mesmas cores valem na grade de Controle, na lista de pedidos e no `.xlsx` (constantes em `App\Support\ColunasControle`
+e `resources/js/lib/controle.ts`; mantenha os dois iguais):
 
 | Situação | Cor | Estilo |
 |---|---|---|
-| Entregue | azul-acinzentado `#8496B0` | texto riscado |
-| Finalizado | verde `#C5E0B3` | — |
-| Entrega em até 7 dias da data de hoje (ou atrasada) e ainda em aberto | amarelo `#FFD965` | — |
-| Em andamento | cinza `#ECECEC` | — |
+| Cancelado | lilás `#D9C7EA` | texto riscado |
+| Entregue | verde `#A9D18E` | texto riscado |
+| Finalizado | azul claro `#BDD7EE` | — |
+| Em andamento, entrega em **até 10 dias** (ou já vencida) | vermelho `#FF9999` | — |
+| Em andamento, entrega em **até 20 dias** | amarelo `#FFD965` | — |
+| Em andamento, entrega em mais de 20 dias (ou sem data) | cinza `#ECECEC` | — |
 
-Cabeçalho: cinza `#E7E6E6` (colunas até Desenho nesting), amarelo `#FEF2CB` (compras), verde `#E2EFD9` (produção e responsável)
-e azul-acinzentado `#D6DCE4` (status). As cores ficam em constantes de `ColunasControle`.
+A prioridade é a da tabela (de cima para baixo). O prazo é contado a partir de **hoje** (`=TODAY()` na célula Q1 do Excel).
 
-**Duas diferenças em relação à planilha original**, de propósito:
+**Na lista de pedidos** (tela inicial) cada pedido recebe uma cor pela situação geral dos itens: cancelado se todos foram cancelados,
+entregue se todos estão encerrados (entregues ou cancelados), finalizado se nenhum está em andamento e, caso contrário, andamento,
+com o prazo da **entrega mais próxima entre os itens em andamento**.
 
-- Na planilha, a regra do prazo tinha prioridade sobre "Entregue" e usava uma data digitada em Q1, então itens já entregues
-  também ficavam amarelos. Aqui a ordem é Entregue → Finalizado → Prazo, e a data de referência (Q1) é `=TODAY()`.
-- A regra do prazo ignora itens sem data de entrega (na planilha, uma data vazia contava como "vencida").
+Cabeçalho da planilha: cinza `#E7E6E6` (colunas até Desenho nesting), amarelo `#FEF2CB` (compras), verde `#E2EFD9` (produção e responsável)
+e azul-acinzentado `#D6DCE4` (status).
+
+**Diferenças em relação à planilha original**, de propósito: a regra do prazo era amarela em 7 dias, tinha prioridade sobre "Entregue"
+e usava uma data digitada em Q1 (itens já entregues também ficavam amarelos); aqui a situação vem primeiro e Q1 é `=TODAY()`.
+Linhas sem data de entrega não ganham cor de prazo. Entregue passou de azul-acinzentado para verde, e Finalizado de verde para azul claro.
 
 ## Tela Controle (`/controle`)
 
 Consulta, no formato da planilha. **Não edita**: clicar (ou Enter) em uma linha abre o pedido.
 
 - Abas por ano (ano do **pedido**; sem data do pedido, vale a data de importação) e contagem por status.
-- Filtros: busca (pedido, cliente, produto, cidade), status, responsável, "Ocultar entregues" e "Mostrar colunas ocultas".
+- Filtros: busca (pedido, cliente, produto, cidade), status, responsável, "Ocultar entregues e cancelados" e "Mostrar colunas ocultas".
 
 ## Editar o controle (tela do pedido)
 
@@ -63,11 +73,10 @@ Descrição, quantidade, número e cliente são editados no pedido (formulário 
 |---|---|---|
 | Controle → "Exportar aba 2026" | itens do ano da aba | `controle-de-pedidos-2026.xlsx` |
 | Controle → "Exportar todos os anos" | uma aba por ano | `controle-de-pedidos.xlsx` |
-| Pedido → "Exportar planilha" | os itens daquele pedido, na aba do ano dele | `pedido-<número>.xlsx` |
 
 O `.xlsx` (`PlanilhaControleExporter`, PhpSpreadsheet) segue o modelo: título "CONTROLE PEDIDOS" em F1 e a data em Q1,
 cabeçalho com as mesmas cores e larguras, colunas A e B ocultas, linhas em cinza com bordas, zoom de 85% e sem linhas de grade,
-regras de cor reais do Excel (dá para editar a planilha e as cores continuam funcionando) e linhas formatadas até a 250.
+regras de cor reais do Excel (cancelado, entregue, finalizado, urgente e alerta; dá para editar a planilha e as cores continuam funcionando) e linhas formatadas até a 250.
 Números, datas e quantidades vão como valores do Excel (dá para somar e filtrar). Etapas que são datas viram data; o resto fica como texto.
 O cabeçalho fica congelado (melhoria sobre o modelo).
 
@@ -77,4 +86,4 @@ O cabeçalho fica congelado (melhoria sobre o modelo).
   coluna em `ColunasControle::lista()`, `ControleLinhaResource`, tipos `LinhaControle`/`Item` em `types/index.ts`,
   regra em `AtualizarControleItemRequest` e campos em `EditarControleItem.tsx`, `ItemCard.tsx` e `ItemFormCard.tsx`.
 - **Nova cor ou regra**: constantes em `ColunasControle`; a regra do Excel está em `PlanilhaControleExporter::regrasDeCor()`
-  e a da tela em `estiloDaLinha()` (`GradeControle.tsx`). Mantenha as duas na mesma ordem de prioridade.
+  e a da tela em `estiloPorSituacao()` (`lib/controle.ts`, usada pela grade e pela lista de pedidos). Mantenha as duas na mesma ordem de prioridade.

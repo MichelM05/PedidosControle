@@ -202,14 +202,15 @@ class PlanilhaControleExporter
     }
 
     /**
-     * Regras de cor, em ordem de prioridade: ENTREGUE (azul-acinzentado, riscado), FINALIZADO (verde)
-     * e prazo próximo (amarelo: entrega em até 7 dias da data de Q1 e ainda em aberto).
+     * Regras de cor, em ordem de prioridade: situação (cancelado e entregue riscados, finalizado) e, para itens em aberto,
+     * prazo de entrega em relação à data de Q1 (hoje): vermelho até 10 dias (ou vencida), amarelo até 20 dias.
      */
     private function regrasDeCor(Worksheet $aba, string $ultimaColuna, int $ultimaLinha): void
     {
         $primeira = self::PRIMEIRA_LINHA_DADOS;
-        $status = $this->letra('status');
-        $entrega = $this->letra('dt_entrega');
+        $status = '$'.$this->letra('status').$primeira;
+        $entrega = '$'.$this->letra('dt_entrega').$primeira;
+        $hoje = '$'.$this->letra('status').'$1';
         $regra = function (string $formula, string $cor, bool $riscado = false): Conditional {
             $c = new Conditional;
             $c->setConditionType(Conditional::CONDITION_EXPRESSION)->addCondition($formula)->setStopIfTrue(true);
@@ -223,9 +224,11 @@ class PlanilhaControleExporter
         };
 
         $aba->getStyle("A{$primeira}:{$ultimaColuna}{$ultimaLinha}")->setConditionalStyles([
-            $regra("\${$status}{$primeira}=\"ENTREGUE\"", ColunasControle::COR_ENTREGUE, riscado: true),
-            $regra("\${$status}{$primeira}=\"FINALIZADO\"", ColunasControle::COR_FINALIZADO),
-            $regra("AND(\${$entrega}{$primeira}<>\"\",(\${$entrega}{$primeira}-".ColunasControle::DIAS_ALERTA.")<=\${$status}\$1)", ColunasControle::COR_PRAZO),
+            $regra("{$status}=\"CANCELADO\"", ColunasControle::COR_CANCELADO, riscado: true),
+            $regra("{$status}=\"ENTREGUE\"", ColunasControle::COR_ENTREGUE, riscado: true),
+            $regra("{$status}=\"FINALIZADO\"", ColunasControle::COR_FINALIZADO),
+            $regra("AND({$entrega}<>\"\",({$entrega}-".ColunasControle::DIAS_URGENTE.")<={$hoje})", ColunasControle::COR_URGENTE),
+            $regra("AND({$entrega}<>\"\",({$entrega}-".ColunasControle::DIAS_ALERTA.")<={$hoje})", ColunasControle::COR_ALERTA),
         ]);
     }
 

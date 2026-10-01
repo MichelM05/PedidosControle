@@ -48,17 +48,20 @@ class Pedido extends Model
             ->orWhere(fn ($q) => $q->whereNull('data_pedido')->whereBetween('created_at', [$inicio.' 00:00:00', $fim.' 23:59:59'])));
     }
 
-    /** Ano em que o pedido cai na planilha de controle. */
-    public function anoDoControle(): int
-    {
-        return (int) ($this->data_pedido ?? $this->created_at ?? now())->format('Y');
-    }
-
     public function scopeSearch($query, array $filtros = [])
     {
         // Lista: só as colunas da tabela (evita carregar o texto bruto do PDF) e a contagem de itens
         $query->select(['id', 'numero', 'data_pedido', 'cliente', 'fornecedor', 'valor'])
-            ->withCount('itens')
+            ->withCount([
+                'itens',
+                'itens as itens_andamento_count' => fn ($q) => $q->where('status', 'andamento'),
+                'itens as itens_finalizado_count' => fn ($q) => $q->where('status', 'finalizado'),
+                'itens as itens_entregue_count' => fn ($q) => $q->where('status', 'entregue'),
+                'itens as itens_cancelado_count' => fn ($q) => $q->where('status', 'cancelado'),
+            ])
+            // Entrega mais próxima entre os itens ainda em andamento (base da cor de prazo na lista)
+            ->withMin(['itens as proxima_entrega' => fn ($q) => $q->where('status', 'andamento')], 'dt_entrega')
+            ->withMax('itens as ultima_entrega', 'dt_entrega')
             ->orderBy('id', 'desc');
 
         if (! empty($filtros['numero']) && is_scalar($filtros['numero'])) {

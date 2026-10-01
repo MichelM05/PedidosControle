@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Pedido;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -10,6 +11,12 @@ use Tests\TestCase;
 class PedidoCrudTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->actingAs(User::factory()->create());
+    }
 
     private function dados(array $extra = []): array
     {
@@ -190,5 +197,40 @@ class PedidoCrudTest extends TestCase
         $this->get(route('pedidos.show', $pedido))->assertInertia(fn (Assert $page) => $page
             ->where('pedido.dados_extras.frete', 'CIF')
             ->where('pedido.dados_extras.blocos.fornecedor.nome', 'Fornecedor B'));
+    }
+
+    public function test_lista_envia_a_situacao_geral_e_a_proxima_entrega_de_cada_pedido(): void
+    {
+        $cria = function (string $numero, array $itens) {
+            $pedido = Pedido::create(['numero' => $numero]);
+            foreach ($itens as $item) {
+                $pedido->itens()->create($item);
+            }
+        };
+        $cria('1', [['status' => 'cancelado'], ['status' => 'cancelado']]);
+        $cria('2', [['status' => 'entregue'], ['status' => 'cancelado']]);
+        $cria('3', [['status' => 'finalizado'], ['status' => 'entregue']]);
+        $cria('4', [['status' => 'andamento', 'dt_entrega' => '2026-12-20'], ['status' => 'andamento', 'dt_entrega' => '2026-11-05'], ['status' => 'entregue', 'dt_entrega' => '2026-01-01']]);
+        $cria('5', []);
+        $cria('6', [['status' => 'entregue', 'dt_entrega' => '2026-03-01'], ['status' => 'entregue', 'dt_entrega' => '2026-04-10']]);
+
+        $this->get(route('pedidos.index'))->assertInertia(fn (Assert $page) => $page
+            ->where('pedidos.data', fn ($pedidos) => collect($pedidos)->mapWithKeys(fn ($p) => [$p['numero'] => [$p['status_geral'], $p['proxima_entrega']]])->all() === [
+                '6' => ['entregue', null],
+                '5' => ['andamento', null],
+                '4' => ['andamento', '2026-11-05'],
+                '3' => ['finalizado', null],
+                '2' => ['entregue', null],
+                '1' => ['cancelado', null],
+            ])
+            ->where('pedidos.data', fn ($pedidos) => collect($pedidos)->pluck('data_entrega', 'numero')->all() === [
+                '6' => '2026-04-10', // sem itens em aberto: a última entrega
+                '5' => null,
+                '4' => '2026-11-05', // com itens em aberto: a mais próxima
+                '3' => null,
+                '2' => null,
+                '1' => null,
+            ])
+            ->has('status', 4)->has('cores.urgente')->where('prazos', ['alerta' => 20, 'urgente' => 10]));
     }
 }

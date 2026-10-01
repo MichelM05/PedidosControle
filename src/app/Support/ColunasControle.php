@@ -17,17 +17,27 @@ class ColunasControle
 
     public const COR_STATUS = 'D6DCE4';
 
-    // Cores das linhas (fundo padrão e regras por situação)
+    // Cores das linhas: fundo padrão e regras por situação / prazo
     public const COR_LINHA = 'ECECEC';
 
-    public const COR_ENTREGUE = '8496B0';
+    public const COR_ENTREGUE = 'A9D18E';
 
-    public const COR_FINALIZADO = 'C5E0B3';
+    public const COR_FINALIZADO = 'BDD7EE';
 
-    public const COR_PRAZO = 'FFD965';
+    public const COR_CANCELADO = 'D9C7EA';
 
-    /** Dias antes da entrega em que a linha ganha destaque amarelo. */
-    public const DIAS_ALERTA = 7;
+    public const COR_ALERTA = 'FFD965';
+
+    public const COR_URGENTE = 'FF9999';
+
+    /** Itens em aberto ficam amarelos quando faltam até este número de dias para a entrega... */
+    public const DIAS_ALERTA = 20;
+
+    /** ...e vermelhos quando faltam até estes dias (ou a data já passou). */
+    public const DIAS_URGENTE = 10;
+
+    /** Situações que encerram o item: saem das regras de prazo e ganham risco no texto. */
+    public const STATUS_ENCERRADOS = ['entregue', 'cancelado'];
 
     /**
      * @return list<array{chave: string, titulo: string, tela: string, largura: float, cor: string, alinha: string, oculta: bool, tipo: string}>
@@ -55,5 +65,24 @@ class ColunasControle
             $c('responsavel', 'RESPONSÁVEL', 'Responsável', 11.140625, self::COR_PRODUCAO),
             $c('status', 'STATUS', 'Status', 12.140625, self::COR_STATUS, tipo: 'status'),
         ];
+    }
+
+    /** Cores das linhas por situação e prazo (hexadecimal sem #), no formato enviado ao front. */
+    public static function cores(): array
+    {
+        return [
+            'linha' => self::COR_LINHA,
+            'entregue' => self::COR_ENTREGUE,
+            'finalizado' => self::COR_FINALIZADO,
+            'cancelado' => self::COR_CANCELADO,
+            'alerta' => self::COR_ALERTA,
+            'urgente' => self::COR_URGENTE,
+        ];
+    }
+
+    /** Dias para a entrega que disparam o amarelo (alerta) e o vermelho (urgente). */
+    public static function prazos(): array
+    {
+        return ['alerta' => self::DIAS_ALERTA, 'urgente' => self::DIAS_URGENTE];
     }
 }

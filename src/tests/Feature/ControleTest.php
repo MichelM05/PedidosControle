@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Pedido;
 use App\Models\PedidoItem;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -12,6 +13,12 @@ use Tests\TestCase;
 class ControleTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->actingAs(User::factory()->create());
+    }
 
     private function pedido(string $numero, string $data, array $itens): Pedido
     {
@@ -74,7 +81,9 @@ class ControleTest extends TestCase
 
         $this->get(route('controle.index', ['status' => 'entregue']))->assertInertia(fn (Assert $p) => $p->has('linhas', 1));
         $this->get(route('controle.index', ['responsavel' => 'JORGE']))->assertInertia(fn (Assert $p) => $p->has('linhas', 2));
-        $this->get(route('controle.index', ['ocultar_entregues' => 1]))->assertInertia(fn (Assert $p) => $p->has('linhas', 2));
+        $this->get(route('controle.index', ['ocultar_entregues' => 1]))->assertInertia(fn (Assert $p) => $p->has('linhas', 2)); // entregue sai
+        $this->pedido('300', '2026-03-01', [['denominacao' => 'd', 'status' => 'cancelado']]);
+        $this->get(route('controle.index', ['ocultar_entregues' => 1]))->assertInertia(fn (Assert $p) => $p->has('linhas', 2)); // cancelado também
         $this->get(route('controle.index', ['status' => 'invalido']))->assertSessionHasErrors('status');
     }
 
@@ -120,7 +129,7 @@ class ControleTest extends TestCase
         $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'status' => 'finalizado', 'responsavel' => 'Jorge']]);
 
         $this->get(route('pedidos.show', $pedido))->assertInertia(fn (Assert $page) => $page
-            ->has('status', 3)->where('pedido.itens.0.status', 'finalizado')->where('pedido.itens.0.responsavel', 'Jorge'));
+            ->has('status', 4)->where('pedido.itens.0.status', 'finalizado')->where('pedido.itens.0.responsavel', 'Jorge'));
     }
 
     public function test_exporta_a_planilha_no_formato_do_modelo(): void
@@ -168,31 +177,67 @@ class ControleTest extends TestCase
         $this->assertSame('FFD6DCE4', $aba->getStyle('Q2')->getFill()->getStartColor()->getARGB());
         $this->assertSame('FFECECEC', $aba->getStyle('D3')->getFill()->getStartColor()->getARGB());
 
-        // regras de cor: entregue (riscado), finalizado e prazo
+        // regras de cor, em ordem de prioridade: cancelado, entregue, finalizado, urgente (10 dias) e alerta (20 dias)
         $regras = $aba->getConditionalStyles('A3');
-        $this->assertCount(3, $regras);
-        $this->assertSame('$Q3="ENTREGUE"', $regras[0]->getConditions()[0]);
+        $this->assertCount(5, $regras);
+        $this->assertSame('$Q3="CANCELADO"', $regras[0]->getConditions()[0]);
         $this->assertTrue($regras[0]->getStyle()->getFont()->getStrikethrough());
-        $this->assertSame('FF8496B0', $regras[0]->getStyle()->getFill()->getEndColor()->getARGB());
-        $this->assertSame('FFC5E0B3', $regras[1]->getStyle()->getFill()->getEndColor()->getARGB());
-        $this->assertSame('FFFFD965', $regras[2]->getStyle()->getFill()->getEndColor()->getARGB());
+        $this->assertSame('$Q3="ENTREGUE"', $regras[1]->getConditions()[0]);
+        $this->assertTrue($regras[1]->getStyle()->getFont()->getStrikethrough());
+        $cores = array_map(fn ($r) => $r->getStyle()->getFill()->getEndColor()->getARGB(), $regras);
+        $this->assertSame(['FFD9C7EA', 'FFA9D18E', 'FFBDD7EE', 'FFFF9999', 'FFFFD965'], $cores);
+        $this->assertSame('AND($F3<>"",($F3-10)<=$Q$1)', $regras[3]->getConditions()[0]);
+        $this->assertSame('AND($F3<>"",($F3-20)<=$Q$1)', $regras[4]->getConditions()[0]);
     }
 
-    public function test_exporta_um_ano_e_um_pedido(): void
+    public function test_exporta_um_ano(): void
     {
-        $a = $this->pedido('100', '2026-02-01', [['denominacao' => 'a'], ['denominacao' => 'b']]);
+        $this->pedido('100', '2026-02-01', [['denominacao' => 'a'], ['denominacao' => 'b']]);
         $this->pedido('200', '2025-05-01', [['denominacao' => 'c']]);
 
-        $ano = $this->get(route('controle.exportar', ['ano' => 2025]));
-        $ano->assertDownload('controle-de-pedidos-2025.xlsx');
-        $this->assertSame(['2025'], $this->planilha($ano->streamedContent())->getSheetNames());
+        $resposta = $this->get(route('controle.exportar', ['ano' => 2025]));
+        $resposta->assertDownload('controle-de-pedidos-2025.xlsx');
 
-        $um = $this->get(route('pedidos.exportar', $a));
-        $um->assertDownload('pedido-100.xlsx');
-        $aba = $this->planilha($um->streamedContent())->getSheetByName('2026');
-        $this->assertSame('a', $aba->getCell('D3')->getValue());
-        $this->assertSame('b', $aba->getCell('D4')->getValue());
-        $this->assertNull($aba->getCell('D5')->getValue());
+        $arquivo = $this->planilha($resposta->streamedContent());
+        $this->assertSame(['2025'], $arquivo->getSheetNames());
+        $this->assertSame('c', $arquivo->getSheetByName('2025')->getCell('D3')->getValue());
+    }
+
+    public function test_status_cancelado_sai_riscado_na_planilha_e_conta_nos_totais(): void
+    {
+        $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'status' => 'cancelado'], ['denominacao' => 'b']]);
+
+        $this->get(route('controle.index'))->assertInertia(fn (Assert $page) => $page->where('totais.cancelado', 1)->where('status.cancelado', 'Cancelado'));
+
+        $aba = $this->planilha($this->get(route('controle.exportar'))->streamedContent())->getSheetByName('2026');
+        $this->assertSame('CANCELADO', $aba->getCell('Q3')->getValue());
+    }
+
+    public function test_muda_o_status_de_todos_os_itens_do_pedido(): void
+    {
+        $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'status' => 'andamento'], ['denominacao' => 'b', 'status' => 'finalizado']]);
+        $outro = $this->pedido('200', '2026-02-01', [['denominacao' => 'c', 'status' => 'andamento']]);
+
+        $this->patch(route('pedidos.status', $pedido), ['status' => 'entregue'])->assertSessionHas('success');
+
+        $this->assertSame(['entregue', 'entregue'], $pedido->itens()->pluck('status')->all());
+        $this->assertSame('andamento', $outro->itens()->first()->status); // não mexe em outros pedidos
+
+        $this->patch(route('pedidos.status', $pedido), ['status' => 'xyz'])->assertSessionHasErrors('status');
+        $this->patch(route('pedidos.status', $pedido), [])->assertSessionHasErrors('status');
+    }
+
+    public function test_status_de_um_unico_item_sem_alterar_o_resto_do_controle(): void
+    {
+        $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'responsavel' => 'Jorge', 'solda' => 'x']]);
+        $item = $pedido->itens->first();
+
+        $this->patch(route('controle.atualizar', $item), ['status' => 'cancelado'])->assertSessionHasNoErrors();
+
+        $item->refresh();
+        $this->assertSame('cancelado', $item->status);
+        $this->assertSame('Jorge', $item->responsavel);
+        $this->assertSame('x', $item->solda);
     }
 
     public function test_editar_o_pedido_pelo_formulario_preserva_o_controle_dos_itens(): void
