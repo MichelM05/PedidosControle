@@ -40,3 +40,9 @@ export function cnpj(v: string | null | undefined): string {
 export function texto(v: string | null | undefined): string {
     return v?.trim() ? v : VAZIO;
 }
+
+/** Data e hora no fuso do navegador: "03/10/2026 14:32". */
+export function dataHora(iso: string | null | undefined): string {
+    if (!iso) return VAZIO;
+    return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}

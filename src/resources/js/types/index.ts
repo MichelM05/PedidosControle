@@ -143,3 +143,25 @@ export interface LinhaControle {
     status: string;
     [chave: string]: string | number | null;
 }
+
+/** Uma alteração do histórico (um campo alterado, ou a criação/exclusão). */
+export interface RegistroHistorico {
+    id: number;
+    acao: 'criou' | 'editou' | 'excluiu';
+    campo: string | null;
+    valor_anterior: string | null;
+    valor_novo: string | null;
+    item_id: number | null;
+    item_descricao: string | null;
+}
+
+/** Alterações salvas juntas: quem fez, quando, em qual pedido. */
+export interface GrupoHistorico {
+    lote: string;
+    quando: string | null;
+    usuario: string;
+    pedido_id: number | null;
+    pedido_numero: string | null;
+    origem: string | null;
+    registros: RegistroHistorico[];
+}

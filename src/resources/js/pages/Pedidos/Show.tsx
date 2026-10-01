@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import EditarSecao, { type Secao } from '@/components/pedidos/EditarSecao';
+import ListaHistorico from '@/components/historico/ListaHistorico';
 import EditarControleItem from '@/components/pedidos/EditarControleItem';
 import ExcluirPedido from '@/components/pedidos/ExcluirPedido';
 import ItemCard from '@/components/pedidos/ItemCard';
@@ -10,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout';
 import * as f from '@/lib/format';
 import { rotas } from '@/lib/routes';
-import type { BlocoChave, Item, Pedido, Rotulos } from '@/types';
+import type { BlocoChave, GrupoHistorico, Item, Pedido, Rotulos } from '@/types';
 
 const Rotulo = ({ children }: { children: React.ReactNode }) => (
     <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-muted-foreground">{children}</span>
@@ -22,7 +23,7 @@ const BotaoEditar = ({ onClick, claro }: { onClick: () => void; claro?: boolean 
     </Button>
 );
 
-export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotulos: Rotulos; status: Record<string, string> }) {
+export default function Show({ pedido, rotulos, status, historico }: { pedido: Pedido; rotulos: Rotulos; status: Record<string, string>; historico: GrupoHistorico[] }) {
     const [secao, setSecao] = useState<Secao | null>(null);
     const [itemControle, setItemControle] = useState<Item | null>(null);
     const extras = pedido.dados_extras ?? {};
@@ -199,6 +200,16 @@ export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotu
                             ))}
                         </div>
                     )}
+
+                    <details className="text-sm">
+                        <summary className="cursor-pointer font-bold text-muted-foreground">Histórico deste pedido ({historico.length} {historico.length === 1 ? 'alteração' : 'alterações'})</summary>
+                        <div className="mt-3 grid gap-3">
+                            <ListaHistorico grupos={historico} mostrarPedido={false} />
+                            <Link href={`${rotas.historico}?pedido=${pedido.id}`} className="text-sm font-semibold underline-offset-2 hover:underline">
+                                Ver tudo na tela de histórico →
+                            </Link>
+                        </div>
+                    </details>
 
                     {pedido.texto_bruto && (
                         <details className="text-sm">

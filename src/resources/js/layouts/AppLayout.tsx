@@ -12,6 +12,7 @@ export default function AppLayout({ children, largura = 'max-w-6xl' }: { childre
     const { url } = usePage();
     const naControle = url.startsWith('/controle');
     const nosUsuarios = url.startsWith('/usuarios');
+    const noHistorico = url.startsWith('/historico');
     const noPerfil = url.startsWith('/perfil');
 
     return (
@@ -26,8 +27,9 @@ export default function AppLayout({ children, largura = 'max-w-6xl' }: { childre
                     </Link>
                     <nav className="flex gap-2" aria-label="Principal">
                         {[
-                            ['/', 'Pedidos', !naControle && !nosUsuarios && !noPerfil],
+                            ['/', 'Pedidos', !naControle && !nosUsuarios && !noPerfil && !noHistorico],
                             ['/controle', 'Controle', naControle],
+                            ['/historico', 'Histórico', noHistorico],
                             ...(usuario?.is_admin ? [['/usuarios', 'Usuários', nosUsuarios]] : []),
                         ].map(([href, rotulo, ativo]) => (
                             <Link

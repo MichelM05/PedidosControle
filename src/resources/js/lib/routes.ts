@@ -1,5 +1,6 @@
 /** URLs da aplicação (espelham routes/web.php). */
 export const rotas = {
+    historico: '/historico',
     login: '/login',
     registro: '/registro',
     logout: '/logout',
