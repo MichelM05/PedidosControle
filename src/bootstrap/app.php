@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ApenasAdministradores;
 use App\Http\Middleware\BloquearUsuarioInativo;
+use App\Http\Middleware\CabecalhosDeSeguranca;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [HandleInertiaRequests::class]);
+        $middleware->append(CabecalhosDeSeguranca::class); // global: também nas respostas de erro e redirecionamentos
         $middleware->alias(['admin' => ApenasAdministradores::class, 'ativo' => BloquearUsuarioInativo::class]);
         $middleware->redirectGuestsTo('/login');
         $middleware->redirectUsersTo('/');

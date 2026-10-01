@@ -244,4 +244,75 @@ class AuthTest extends TestCase
             ->assertRedirect('/');
         $this->assertDatabaseCount('users', 1);
     }
+
+    public function test_login_bloqueia_temporariamente_depois_de_varias_senhas_erradas(): void
+    {
+        User::factory()->create(['email' => 'ana@empresa.com', 'password' => 'segredo123']);
+
+        foreach (range(1, 5) as $i) {
+            $this->post(route('login.store'), ['email' => 'ana@empresa.com', 'password' => "errada$i"])->assertSessionHasErrors(['email' => 'E-mail ou senha incorretos.']);
+        }
+
+        // a 6ª tentativa é barrada, mesmo com a senha certa
+        $this->post(route('login.store'), ['email' => 'ana@empresa.com', 'password' => 'segredo123'])
+            ->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Muitas tentativas', session('errors')->first('email'));
+        $this->assertGuest();
+
+        // outro e-mail não é afetado
+        User::factory()->create(['email' => 'bia@empresa.com', 'password' => 'segredo123']);
+        $this->post(route('login.store'), ['email' => 'bia@empresa.com', 'password' => 'segredo123']);
+        $this->assertAuthenticated();
+    }
+
+    public function test_login_certo_zera_a_contagem_de_erros(): void
+    {
+        User::factory()->create(['email' => 'ana@empresa.com', 'password' => 'segredo123']);
+
+        foreach (range(1, 4) as $i) {
+            $this->post(route('login.store'), ['email' => 'ana@empresa.com', 'password' => "errada$i"]);
+        }
+        $this->post(route('login.store'), ['email' => 'ana@empresa.com', 'password' => 'segredo123']);
+        $this->assertAuthenticated();
+
+        auth()->logout();
+        foreach (range(1, 4) as $i) { // recomeça do zero: 4 erros não bloqueiam
+            $this->post(route('login.store'), ['email' => 'ana@empresa.com', 'password' => "outra$i"]);
+        }
+        $this->post(route('login.store'), ['email' => 'ana@empresa.com', 'password' => 'segredo123']);
+        $this->assertAuthenticated();
+    }
+
+    public function test_cadastro_tem_limite_por_endereco(): void
+    {
+        foreach (range(1, 10) as $i) {
+            auth()->logout();
+            $this->post(route('registro.store'), ['name' => "U$i", 'email' => "u$i@empresa.com", 'password' => 'senha12345', 'password_confirmation' => 'senha12345']);
+        }
+        auth()->logout();
+
+        $this->post(route('registro.store'), ['name' => 'Extra', 'email' => 'extra@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345'])
+            ->assertSessionHasErrors('email');
+        $this->assertDatabaseMissing('users', ['email' => 'extra@empresa.com']);
+    }
+
+    public function test_respostas_trazem_cabecalhos_de_seguranca_e_csp_nas_paginas(): void
+    {
+        $resposta = $this->get(route('login'));
+
+        $resposta->assertHeader('X-Frame-Options', 'DENY')->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')->assertHeaderMissing('X-Powered-By');
+        $csp = $resposta->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("default-src 'self'", $csp);
+        $this->assertStringContainsString("frame-ancestors 'none'", $csp);
+        $this->assertStringContainsString("object-src 'none'", $csp);
+
+        $this->get(route('login'), ['X-Inertia' => 'true', 'X-Inertia-Version' => 'x'])->assertHeader('X-Frame-Options', 'DENY'); // respostas JSON do Inertia também
+    }
+
+    public function test_hsts_so_em_conexao_segura_e_pdf_sem_csp(): void
+    {
+        $this->get(route('login'))->assertHeaderMissing('Strict-Transport-Security');
+        $this->get('https://localhost/login')->assertHeader('Strict-Transport-Security');
+    }
 }
