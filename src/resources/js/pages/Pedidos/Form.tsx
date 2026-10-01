@@ -2,6 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
 import Field from '@/components/Field';
+import ExcluirPedido from '@/components/pedidos/ExcluirPedido';
 import ItemFormCard from '@/components/pedidos/ItemFormCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,10 +68,11 @@ export default function Form({ pedido }: { pedido: Pedido | null }) {
 
             <Card>
                 <CardContent className="grid gap-6">
-                    <div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <Button asChild variant="outline">
                             <Link href={voltar}>← Voltar</Link>
                         </Button>
+                        {existe && <ExcluirPedido pedido={pedido} variant="destructive" />}
                     </div>
 
                     <h2 className="text-2xl font-extrabold">{existe ? `Editar pedido nº ${pedido.numero ?? pedido.id}` : 'Criar pedido manual'}</h2>
