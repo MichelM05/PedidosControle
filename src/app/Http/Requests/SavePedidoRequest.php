@@ -3,13 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\PedidoItem;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class SavePedidoRequest extends BaseRequest
 {
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -22,6 +23,7 @@ class SavePedidoRequest extends BaseRequest
 
             // Validação dos itens (array)
             'itens' => 'nullable|array',
+            'itens.*.id' => 'nullable|integer',
             'itens.*.item' => 'nullable|string',
             'itens.*.material' => 'nullable|string',
             'itens.*.denominacao' => 'nullable|string',

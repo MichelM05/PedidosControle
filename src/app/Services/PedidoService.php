@@ -10,22 +10,53 @@ use Illuminate\Support\Facades\DB;
  */
 class PedidoService
 {
+    public function __construct(private HistoricoService $historico) {}
+
     /**
-     * Cria ou atualiza o pedido e sincroniza os itens (os antigos são substituídos pelos enviados).
+     * Cria ou atualiza o pedido e sincroniza os itens: itens com `id` do próprio pedido são atualizados (mantendo o id e o
+     * histórico), os sem `id` são criados e os que não vieram são removidos. Aceita zero itens.
      *
      * @throws \Throwable
      */
     public function salvar(Pedido $pedido, array $dados, array $itens = []): Pedido
     {
         return DB::transaction(function () use ($pedido, $dados, $itens) {
+            $novo = ! $pedido->exists;
             $pedido->fill($dados)->save();
 
-            $pedido->itens()->delete();
-            // Item sem situação informada entra como "andamento" (padrão do controle)
-            $pedido->itens()->createMany(array_map(fn (array $item) => [...$item, 'status' => $item['status'] ?? 'andamento'], $itens));
+            // Pedido novo: a criação do pedido já resume os itens, então não registra cada um
+            $novo
+                ? $this->historico->semRegistrarItens(fn () => $this->sincronizarItens($pedido, $itens))
+                : $this->sincronizarItens($pedido, $itens);
+
+            if ($novo) {
+                $this->historico->pedidoCriado($pedido, 'Criado manualmente');
+            }
 
             return $pedido;
         });
+    }
+
+    private function sincronizarItens(Pedido $pedido, array $itens): void
+    {
+        $existentes = $pedido->itens()->get()->keyBy('id');
+        $mantidos = [];
+
+        foreach ($itens as $dados) {
+            $id = isset($dados['id']) ? (int) $dados['id'] : null;
+            unset($dados['id']);
+            // Item sem situação informada entra como "andamento" (padrão do controle)
+            $dados['status'] = $dados['status'] ?? 'andamento';
+
+            if ($id && $existentes->has($id)) {
+                $existentes[$id]->update($dados);
+                $mantidos[] = $id;
+            } else {
+                $pedido->itens()->create($dados);
+            }
+        }
+
+        $existentes->except($mantidos)->each->delete();
     }
 
     /**

@@ -64,7 +64,8 @@ class ControleController extends Controller
     /** Muda o status de todos os itens de um pedido de uma vez (ex.: marcar o pedido inteiro como entregue). */
     public function atualizarStatusPedido(AtualizarStatusPedidoRequest $request, Pedido $pedido)
     {
-        $pedido->itens()->update(['status' => $request->validated('status')]);
+        // Item a item (não em uma única consulta) para que cada mudança entre no histórico
+        $pedido->itens->each->update(['status' => $request->validated('status')]);
 
         return back()->with('success', 'Status de todos os itens atualizado.');
     }

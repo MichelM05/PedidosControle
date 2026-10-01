@@ -31,7 +31,8 @@ class PedidoUploadService
                     'arquivo_pdf' => $caminho,
                     'dados_extras' => $extraido['dados_extras'],
                 ]);
-                $pedido->itens()->createMany($extraido['itens']);
+                $this->historico->semRegistrarItens(fn () => $pedido->itens()->createMany($extraido['itens']));
+                $this->historico->pedidoCriado($pedido, 'Importado do PDF');
 
                 return $pedido;
             });

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ControleController;
+use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\UsuarioController;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'ativo'])->group(function () {
     Route::get('/pedidos/{pedido}/pdf', [PedidoController::class, 'pdf'])->name('pedidos.pdf');
     Route::patch('/pedidos/{pedido}/dados', [PedidoController::class, 'atualizarDados'])->name('pedidos.dados');
     Route::resource('pedidos', PedidoController::class)->except(['index']);
+
+    // Histórico de alterações (quem, o quê e quando)
+    Route::get('/historico', [HistoricoController::class, 'index'])->name('historico.index');
 
     // Controle de pedidos (planilha): grade por ano, edição do controle do item, status e exportação .xlsx
     Route::get('/controle', [ControleController::class, 'index'])->name('controle.index');

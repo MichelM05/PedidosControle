@@ -7,8 +7,10 @@ use App\Http\Requests\SavePedidoRequest;
 use App\Http\Requests\SearchPedidoRequest;
 use App\Http\Requests\UploadPedidoRequest;
 use App\Http\Resources\PedidoResource;
+use App\Models\Historico;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
+use App\Services\HistoricoService;
 use App\Services\PedidoService;
 use App\Services\PedidoUploadService;
 use App\Support\ColunasControle;
@@ -18,7 +20,7 @@ use Throwable;
 
 class PedidoController extends Controller
 {
-    public function __construct(private PedidoService $pedidos) {}
+    public function __construct(private PedidoService $pedidos, private HistoricoService $historico) {}
 
     public function index(SearchPedidoRequest $request)
     {
@@ -40,6 +42,7 @@ class PedidoController extends Controller
             'pedido' => PedidoResource::make($pedido->load('itens')),
             'rotulos' => ['blocos' => Pedido::BLOCOS, 'condicoes' => Pedido::CONDICOES],
             'status' => PedidoItem::STATUS,
+            'historico' => $this->historico->agrupar(Historico::where('pedido_id', $pedido->id)->latest('id')->limit(80)->get()),
         ]);
     }
 
