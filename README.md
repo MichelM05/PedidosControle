@@ -44,6 +44,7 @@ docker compose exec app php artisan pedidos:reextrair # reaplica o parser em ped
 docker compose logs -f app                            # logs
 cd src && npm run dev                                 # front com recarregamento automático (em vez de build)
 cd src && npm run typecheck                           # confere os tipos TypeScript
+cd src && npm audit                                   # vulnerabilidades das dependências do front
 docker compose down                                   # parar tudo (os dados do banco ficam no volume)
 ```
 
