@@ -10,4 +10,8 @@ export const rotas = {
     dados: (id: number) => `/pedidos/${id}/dados`,
     pdf: (id: number) => `/pedidos/${id}/pdf`,
     excluir: (id: number) => `/pedidos/${id}`,
+    exportarPedido: (id: number) => `/pedidos/${id}/exportar`,
+    controle: '/controle',
+    controleExportar: (ano?: number) => (ano ? `/controle/exportar?ano=${ano}` : '/controle/exportar'),
+    controleItem: (id: number) => `/controle/itens/${id}`,
 };

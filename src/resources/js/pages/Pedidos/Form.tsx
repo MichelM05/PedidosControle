@@ -16,7 +16,9 @@ type ItemEditavel = Item & { _k: number };
 const ITEM_VAZIO: Item = {
     item: null, material: null, denominacao: null, qtd: null, un: null, preco: null, vlr_tot: null, icms: null, ipi: null,
     dt_entrega: null, item_lei: null, tipo_manutencao: null, local_prestacao: null, desconto_absoluto: null,
-    icms_monofasico: null, reducao_base_icms: null, base_inss: null,
+    icms_monofasico: null, reducao_base_icms: null, base_inss: null, cidade_entrega: null,
+    desenho_nesting: null, compra_mp: null, compra_insumo: null, usinagem: null, corte_dobra: null, solda: null,
+    pintura: null, montagem: null, responsavel: null, status: 'andamento',
 };
 
 const CAMPOS: { nome: 'numero' | 'data_pedido' | 'cliente' | 'fornecedor' | 'valor'; rotulo: string; tipo?: string; placeholder?: string }[] = [
@@ -28,7 +30,7 @@ const CAMPOS: { nome: 'numero' | 'data_pedido' | 'cliente' | 'fornecedor' | 'val
 ];
 
 /** Criar (pedido = null) ou editar um pedido completo, com seus itens. */
-export default function Form({ pedido }: { pedido: Pedido | null }) {
+export default function Form({ pedido, status }: { pedido: Pedido | null; status: Record<string, string> }) {
     const existe = pedido !== null;
     const proximaChave = useRef(0);
     const novoItem = (item: Item = ITEM_VAZIO): ItemEditavel => ({ ...item, _k: proximaChave.current++ });
@@ -114,6 +116,7 @@ export default function Form({ pedido }: { pedido: Pedido | null }) {
                                     posicao={i + 1}
                                     minimizado={minimizados.has(item._k)}
                                     erros={form.errors}
+                                    status={status}
                                     onChange={(campo, valor) => alterarItem(item._k, campo, valor)}
                                     onToggle={() => alternar(item._k)}
                                     onRemove={() => form.setData('itens', form.data.itens.filter((x) => x._k !== item._k))}

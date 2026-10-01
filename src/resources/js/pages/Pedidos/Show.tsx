@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 
 import EditarSecao, { type Secao } from '@/components/pedidos/EditarSecao';
@@ -49,6 +50,11 @@ export default function Show({ pedido, rotulos }: { pedido: Pedido; rotulos: Rot
                                     </a>
                                 </Button>
                             )}
+                            <Button asChild variant="outline">
+                                <a href={rotas.exportarPedido(pedido.id)}>
+                                    <Download /> Exportar planilha
+                                </a>
+                            </Button>
                             <Button asChild variant="outline">
                                 <Link href={rotas.editar(pedido.id)}>Editar</Link>
                             </Button>

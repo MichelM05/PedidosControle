@@ -31,6 +31,12 @@ export default function ItemCard({ item, posicao }: { item: Item; posicao: numbe
             <div className="mb-4 flex justify-between gap-4 border-b pb-3">
                 <div>
                     <Badge className="bg-sage text-zinc-900 uppercase">Item {item.item ?? posicao}</Badge>
+                    {item.status && (
+                        <Badge variant="outline" className="ml-2 uppercase">
+                            {item.status}
+                            {item.responsavel ? ` · ${item.responsavel}` : ''}
+                        </Badge>
+                    )}
                     <div className="mt-1 font-bold">{f.texto(item.denominacao)}</div>
                     {item.material && item.material !== item.denominacao && <div className="text-sm text-muted-foreground">Material: {item.material}</div>}
                 </div>

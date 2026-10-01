@@ -43,6 +43,18 @@ export interface Item {
     icms_monofasico: string | null;
     reducao_base_icms: string | null;
     base_inss: string | null;
+    cidade_entrega: string | null;
+    // Controle de produção (planilha de controle)
+    desenho_nesting: string | null;
+    compra_mp: string | null;
+    compra_insumo: string | null;
+    usinagem: string | null;
+    corte_dobra: string | null;
+    solda: string | null;
+    pintura: string | null;
+    montagem: string | null;
+    responsavel: string | null;
+    status: string | null;
 }
 
 export interface Pedido {
@@ -80,4 +92,39 @@ export interface PageProps {
     flash: { success?: string | null };
     errors: Record<string, string>;
     [key: string]: unknown;
+}
+
+/** Coluna da grade de controle (vem de App\\Support\\ColunasControle). */
+export interface ColunaControle {
+    chave: string;
+    titulo: string;
+    tela: string;
+    largura: number;
+    cor: string;
+    alinha: 'left' | 'center';
+    oculta: boolean;
+    tipo: 'texto' | 'numero' | 'data' | 'etapa' | 'status';
+}
+
+/** Uma linha da grade: um item de pedido com os dados do pedido. */
+export interface LinhaControle {
+    id: number;
+    pedido_id: number;
+    cliente: string | null;
+    numero: string | null;
+    denominacao: string | null;
+    qtd: number | null;
+    dt_entrega: string | null;
+    cidade_entrega: string | null;
+    desenho_nesting: string | null;
+    compra_mp: string | null;
+    compra_insumo: string | null;
+    usinagem: string | null;
+    corte_dobra: string | null;
+    solda: string | null;
+    pintura: string | null;
+    montagem: string | null;
+    responsavel: string | null;
+    status: string;
+    [chave: string]: string | number | null;
 }
