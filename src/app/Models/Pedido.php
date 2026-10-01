@@ -37,6 +37,23 @@ class Pedido extends Model
         'dados_extras' => 'array',
     ];
 
+    /** Pedidos do ano da planilha de controle: data do pedido (ou, sem ela, a data de importação). */
+    public function scopeDoAno($query, int $ano)
+    {
+        $inicio = "$ano-01-01";
+        $fim = "$ano-12-31";
+
+        return $query->where(fn ($q) => $q
+            ->whereBetween('data_pedido', [$inicio, $fim])
+            ->orWhere(fn ($q) => $q->whereNull('data_pedido')->whereBetween('created_at', [$inicio.' 00:00:00', $fim.' 23:59:59'])));
+    }
+
+    /** Ano em que o pedido cai na planilha de controle. */
+    public function anoDoControle(): int
+    {
+        return (int) ($this->data_pedido ?? $this->created_at ?? now())->format('Y');
+    }
+
     public function scopeSearch($query, array $filtros = [])
     {
         // Lista: só as colunas da tabela (evita carregar o texto bruto do PDF) e a contagem de itens

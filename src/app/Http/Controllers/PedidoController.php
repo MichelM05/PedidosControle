@@ -8,6 +8,7 @@ use App\Http\Requests\SearchPedidoRequest;
 use App\Http\Requests\UploadPedidoRequest;
 use App\Http\Resources\PedidoResource;
 use App\Models\Pedido;
+use App\Models\PedidoItem;
 use App\Services\PedidoService;
 use App\Services\PedidoUploadService;
 use Illuminate\Support\Facades\Storage;
@@ -39,12 +40,12 @@ class PedidoController extends Controller
 
     public function create()
     {
-        return Inertia::render('Pedidos/Form', ['pedido' => null]);
+        return Inertia::render('Pedidos/Form', ['pedido' => null, 'status' => PedidoItem::STATUS]);
     }
 
     public function edit(Pedido $pedido)
     {
-        return Inertia::render('Pedidos/Form', ['pedido' => PedidoResource::make($pedido->load('itens'))]);
+        return Inertia::render('Pedidos/Form', ['pedido' => PedidoResource::make($pedido->load('itens')), 'status' => PedidoItem::STATUS]);
     }
 
     public function store(SavePedidoRequest $request)

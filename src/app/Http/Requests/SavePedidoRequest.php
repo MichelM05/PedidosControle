@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PedidoItem;
+
 class SavePedidoRequest extends BaseRequest
 {
     /**
@@ -37,6 +39,10 @@ class SavePedidoRequest extends BaseRequest
             'itens.*.icms_monofasico' => 'nullable|numeric',
             'itens.*.reducao_base_icms' => 'nullable|numeric',
             'itens.*.base_inss' => 'nullable|numeric',
+            'itens.*.cidade_entrega' => 'nullable|string|max:255',
+            'itens.*.responsavel' => 'nullable|string|max:255',
+            'itens.*.status' => 'nullable|in:'.implode(',', array_keys(PedidoItem::STATUS)),
+            ...collect(array_keys(PedidoItem::ETAPAS))->mapWithKeys(fn ($etapa) => ["itens.*.$etapa" => 'nullable|string|max:255'])->all(),
         ];
     }
 

@@ -21,7 +21,8 @@ class PedidoService
             $pedido->fill($dados)->save();
 
             $pedido->itens()->delete();
-            $pedido->itens()->createMany($itens);
+            // Item sem situação informada entra como "andamento" (padrão do controle)
+            $pedido->itens()->createMany(array_map(fn (array $item) => [...$item, 'status' => $item['status'] ?? 'andamento'], $itens));
 
             return $pedido;
         });

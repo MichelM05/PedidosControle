@@ -129,4 +129,11 @@ TXT;
 
         $this->assertArrayNotHasKey('observacoes', $this->parser->extrairDadosExtras($texto));
     }
+
+    public function test_cidade_de_entrega_vem_do_local_da_prestacao_sem_a_uf(): void
+    {
+        $texto = "ItemMaterialDenominação\tQtd. Un. Preço Vlr Tot. ICMS IPI\n00010\tSERV X\nLocal da Prestação: Ponta Grossa PR\n1 UR 10,00 10,00 0,00 % 0,00 %\nTOTAIS:\n";
+
+        $this->assertSame('Ponta Grossa', $this->parser->extrairItens($texto)[0]['cidade_entrega']);
+    }
 }

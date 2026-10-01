@@ -180,6 +180,11 @@ class PdfPedidoParser
             ] + array_merge(array_fill_keys(PedidoItem::CAMPOS_EXTRAS, null), array_intersect_key($itemLine ?? [], array_flip(PedidoItem::CAMPOS_EXTRAS)));
         }
 
+        foreach ($itens as &$item) {
+            $item['cidade_entrega'] ??= $this->cidadeSemUf($item['local_prestacao'] ?? null);
+        }
+        unset($item);
+
         // Fallback: se não achou linhas de valor, tentar parsing por colunas (espaços múltiplos)
         if (empty($itens)) {
             foreach ($linhas as $linha) {
@@ -359,5 +364,13 @@ class PdfPedidoParser
         $linhas = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $m[1])), fn ($l) => $l !== '');
 
         return $linhas ? implode("\n", $linhas) : null;
+    }
+
+    /** "Ponta Grossa PR" → "Ponta Grossa" (a planilha de controle usa só a cidade). */
+    private function cidadeSemUf(?string $local): ?string
+    {
+        $cidade = trim(preg_replace('/\s+[A-Z]{2}$/u', '', trim((string) $local)));
+
+        return $cidade !== '' ? $cidade : null;
     }
 }

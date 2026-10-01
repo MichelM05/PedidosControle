@@ -13,11 +13,38 @@ class PedidoItem extends Model
     public const CAMPOS_EXTRAS = [
         'dt_entrega', 'item_lei', 'tipo_manutencao', 'local_prestacao',
         'desconto_absoluto', 'icms_monofasico', 'reducao_base_icms', 'base_inss',
+        'cidade_entrega',
+    ];
+
+    /** Etapas do controle de produção (chave => rótulo). Valor livre: texto ou data. */
+    public const ETAPAS = [
+        'desenho_nesting' => 'Desenho nesting',
+        'compra_mp' => 'Compra M.P',
+        'compra_insumo' => 'Compra insumo',
+        'usinagem' => 'Usinagem',
+        'corte_dobra' => 'Corte e/ou dobra',
+        'solda' => 'Solda',
+        'pintura' => 'Pintura',
+        'montagem' => 'Montagem',
+    ];
+
+    /** Situação do item no controle (chave => rótulo). */
+    public const STATUS = [
+        'andamento' => 'Andamento',
+        'finalizado' => 'Finalizado',
+        'entregue' => 'Entregue',
+    ];
+
+    /** Campos preenchidos pela equipe (não vêm do PDF): ficam fora do parser e do pedidos:reextrair. */
+    public const CAMPOS_CONTROLE = [
+        'desenho_nesting', 'compra_mp', 'compra_insumo', 'usinagem', 'corte_dobra', 'solda', 'pintura', 'montagem', // = ETAPAS
+        'responsavel', 'status',
     ];
 
     protected $fillable = [
         'pedido_id', 'item', 'material', 'denominacao', 'qtd', 'un', 'preco', 'vlr_tot', 'icms', 'ipi',
         ...self::CAMPOS_EXTRAS,
+        ...self::CAMPOS_CONTROLE,
     ];
 
     protected $casts = [
