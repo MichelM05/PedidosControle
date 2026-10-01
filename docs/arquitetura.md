@@ -22,8 +22,9 @@ dono das rotas, validação e sessão, e cada ação do controller devolve uma p
 - **`PedidoUploadService`** — lê o PDF (smalot/pdfparser), guarda o arquivo em `storage/app/private/pdfs`,
   chama o parser e cria pedido + itens numa transação. Se o banco falhar, apaga o PDF guardado.
 - **`ControleService`** / **`PlanilhaControleExporter`** — consultas e geração do `.xlsx` da planilha de controle (veja [controle-planilha.md](controle-planilha.md)).
+- **`HistoricoService`** — registra e agrupa o histórico de alterações (veja [historico.md](historico.md)).
 - **`PedidoService`**
-  - `salvar()`: grava o pedido e **substitui** os itens pelos enviados (aceita zero itens).
+  - `salvar()`: grava o pedido e **sincroniza os itens pelo `id`** (atualiza os existentes, cria os sem id e remove os que não vieram; aceita zero itens).
   - `atualizarSecao()`: edição dos modais (`resumo`, `condicoes`, `observacoes` ou um bloco de endereço)
     sem tocar nos itens. Mantém cliente/fornecedor coerentes com o nome dos blocos Faturamento/Fornecedor.
 
@@ -79,6 +80,7 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 | GET/POST | `/login`, POST `/logout` | entrar e sair (veja [autenticacao.md](autenticacao.md)); todas as rotas abaixo exigem login |
 | GET/PATCH/PUT | `/perfil`, `/perfil/senha` | o usuário troca nome, e-mail e senha |
 | GET/POST/PATCH | `/usuarios` | gestão de usuários (administradores) |
+| GET | `/historico` | histórico de alterações com filtros (`Historico/Index`) |
 | GET | `/` | lista com filtros e paginação (`Pedidos/Index`) |
 | POST | `/upload` | importa um PDF |
 | GET | `/pedidos/create`, POST `/pedidos` | criar manualmente |

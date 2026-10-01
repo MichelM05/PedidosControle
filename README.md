@@ -6,6 +6,7 @@ Aplicação **Laravel + React** (Inertia, TypeScript, Tailwind e shadcn/ui) que 
 
 - Envie um PDF → o sistema lê o texto, cria o pedido e guarda o PDF original.
 - A tela de detalhes mostra o que foi extraído, avisa quando os totais não batem e abre o PDF original.
+- O **Histórico** mostra quem mudou o quê e quando, por pedido e item.
 - A tela **Controle** reproduz a planilha CONTROLE DE PEDIDOS (um item por linha, abas por ano, mesmas colunas e cores) e **exporta para Excel** no mesmo formato. Clicar em uma linha abre o pedido, onde o controle de produção é editado.
 - Cabeçalho e blocos de endereço são editáveis por **modais** na própria tela; os itens, pelo formulário.
 - Pedidos também podem ser criados manualmente.
@@ -66,6 +67,7 @@ src/
 │   ├── Services/
 │   │   ├── PdfPedidoParser.php                 # texto do PDF → dados estruturados
 │   │   ├── PedidoUploadService.php             # upload: lê, guarda o PDF e cria o pedido
+│   │   ├── HistoricoService.php                # histórico de alterações (quem, o quê, quando)
 │   │   ├── ControleService.php                 # consultas da planilha de controle (por ano, filtros)
 │   │   ├── PlanilhaControleExporter.php        # gera o .xlsx no formato da planilha
 │   │   └── PedidoService.php                   # salvar pedido/itens e editar por seção
@@ -85,6 +87,7 @@ docs/                                           # documentação detalhada
 
 - [docs/arquitetura.md](docs/arquitetura.md) — camadas, fluxo do upload, banco de dados e rotas
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
+- [docs/historico.md](docs/historico.md) — histórico de alterações: o que é registrado, onde ver e como funciona
 - [docs/seguranca.md](docs/seguranca.md) — o que está protegido e o checklist antes de publicar
 - [docs/autenticacao.md](docs/autenticacao.md) — login, criar conta, perfil, usuários e como fechar o cadastro
 - [docs/controle-planilha.md](docs/controle-planilha.md) — a planilha de controle: colunas, cores, tela e exportação
