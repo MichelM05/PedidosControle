@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Pedido;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PedidoCrudTest extends TestCase
@@ -72,20 +73,41 @@ class PedidoCrudTest extends TestCase
             Pedido::create(['numero' => '45020062'.$i, 'cliente' => 'ACME']);
         }
 
-        $this->get(route('pedidos.index', ['numero' => '45020062']))->assertOk()->assertSee('Mostrando 1–15 de 16');
-        $this->get(route('pedidos.index', ['numero' => '4502006211']))->assertOk()->assertSee('4502006211');
+        $this->get(route('pedidos.index', ['numero' => '45020062']))
+            ->assertInertia(fn (Assert $page) => $page->component('Pedidos/Index')
+                ->where('pedidos.total', 16)->has('pedidos.data', 15)->where('pedidos.data.0.itens_count', 0));
+
+        $this->get(route('pedidos.index', ['numero' => '4502006211']))
+            ->assertInertia(fn (Assert $page) => $page->has('pedidos.data', 1)->where('pedidos.data.0.numero', '4502006211'));
+
         $this->get(route('pedidos.index', ['cliente' => 'ACME', 'page' => 2]))
-            ->assertOk()->assertSee('cliente=ACME', false);
+            ->assertInertia(fn (Assert $page) => $page->has('pedidos.data', 1)
+                ->where('filtros.cliente', 'ACME')->where('pedidos.prev_page_url', fn ($url) => str_contains($url, 'cliente=ACME')));
     }
 
-    public function test_telas_de_detalhe_e_edicao_exibem_acao_de_exclusao_com_confirmacao(): void
+    public function test_lista_nao_carrega_texto_bruto_nem_itens(): void
+    {
+        Pedido::create(['numero' => '1', 'texto_bruto' => 'texto longo']);
+
+        $this->get(route('pedidos.index'))
+            ->assertInertia(fn (Assert $page) => $page->missing('pedidos.data.0.texto_bruto')->missing('pedidos.data.0.itens'));
+    }
+
+    public function test_telas_de_criar_editar_e_detalhes_renderizam_as_paginas_react(): void
     {
         $pedido = Pedido::create(['numero' => '123']);
 
-        $this->get(route('pedidos.show', $pedido))->assertOk()->assertSee('data-confirm=', false);
-        $this->get(route('pedidos.index'))->assertOk()->assertSee('data-confirm=', false);
-        $this->get(route('pedidos.edit', $pedido))->assertOk();
-        $this->get(route('pedidos.create'))->assertOk();
+        $this->get(route('pedidos.create'))->assertInertia(fn (Assert $page) => $page->component('Pedidos/Form')->where('pedido', null));
+        $this->get(route('pedidos.edit', $pedido))->assertInertia(fn (Assert $page) => $page->component('Pedidos/Form')->where('pedido.numero', '123'));
+        $this->get(route('pedidos.show', $pedido))->assertInertia(fn (Assert $page) => $page->component('Pedidos/Show')
+            ->where('pedido.numero', '123')->where('pedido.tem_pdf', false)->has('rotulos.blocos')->has('rotulos.condicoes'));
+    }
+
+    public function test_mensagem_de_sucesso_e_compartilhada_com_as_paginas(): void
+    {
+        $this->post(route('pedidos.store'), $this->dados())->assertRedirect();
+
+        $this->get(route('pedidos.index'))->assertInertia(fn (Assert $page) => $page->where('flash.success', 'Pedido criado com sucesso!'));
     }
 
     private function pedidoComExtras(): Pedido
@@ -148,7 +170,7 @@ class PedidoCrudTest extends TestCase
         $this->assertSame('Fornecedor', $pedido->dados_extras['blocos']['fornecedor']['titulo']);
     }
 
-    public function test_edita_observacoes_e_valida_erros_reabrindo_o_modal(): void
+    public function test_edita_observacoes_e_valida_erros_da_secao(): void
     {
         $pedido = $this->pedidoComExtras();
 
@@ -157,17 +179,16 @@ class PedidoCrudTest extends TestCase
 
         $this->from(route('pedidos.show', $pedido))
             ->patch(route('pedidos.dados', $pedido), ['secao' => 'resumo', 'numero' => '', 'valor' => 'x'])
-            ->assertSessionHasErrors(['numero', 'valor'])
-            ->assertSessionHas('abrir_modal', 'resumo');
+            ->assertRedirect(route('pedidos.show', $pedido))
+            ->assertSessionHasErrors(['numero', 'valor']);
     }
 
-    public function test_tela_de_detalhes_tem_modais_de_edicao(): void
+    public function test_detalhes_enviam_os_dados_extras_para_a_tela(): void
     {
         $pedido = $this->pedidoComExtras();
 
-        $this->get(route('pedidos.show', $pedido))->assertOk()
-            ->assertSee('data-open-modal="edit-resumo"', false)
-            ->assertSee('id="edit-fornecedor"', false)
-            ->assertSee('id="edit-observacoes"', false);
+        $this->get(route('pedidos.show', $pedido))->assertInertia(fn (Assert $page) => $page
+            ->where('pedido.dados_extras.frete', 'CIF')
+            ->where('pedido.dados_extras.blocos.fornecedor.nome', 'Fornecedor B'));
     }
 }

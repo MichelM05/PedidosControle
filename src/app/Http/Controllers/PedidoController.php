@@ -6,10 +6,12 @@ use App\Http\Requests\AtualizarDadosPedidoRequest;
 use App\Http\Requests\SavePedidoRequest;
 use App\Http\Requests\SearchPedidoRequest;
 use App\Http\Requests\UploadPedidoRequest;
+use App\Http\Resources\PedidoResource;
 use App\Models\Pedido;
 use App\Services\PedidoService;
 use App\Services\PedidoUploadService;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Throwable;
 
 class PedidoController extends Controller
@@ -19,28 +21,30 @@ class PedidoController extends Controller
     public function index(SearchPedidoRequest $request)
     {
         $filtros = $request->validated();
-        $pedidos = Pedido::search($filtros)->paginate(15)->withQueryString();
 
-        return view('pedidos.index', compact('pedidos', 'filtros'));
+        return Inertia::render('Pedidos/Index', [
+            'pedidos' => Pedido::search($filtros)->paginate(15)->withQueryString()
+                ->through(fn (Pedido $pedido) => PedidoResource::make($pedido)->resolve()),
+            'filtros' => (object) $filtros,
+        ]);
     }
 
     public function show(Pedido $pedido)
     {
-        $pedido->load('itens');
-
-        return view('pedidos.show', compact('pedido'));
+        return Inertia::render('Pedidos/Show', [
+            'pedido' => PedidoResource::make($pedido->load('itens')),
+            'rotulos' => ['blocos' => Pedido::BLOCOS, 'condicoes' => Pedido::CONDICOES],
+        ]);
     }
 
     public function create()
     {
-        return view('pedidos.create', ['pedido' => new Pedido]);
+        return Inertia::render('Pedidos/Form', ['pedido' => null]);
     }
 
     public function edit(Pedido $pedido)
     {
-        $pedido->load('itens');
-
-        return view('pedidos.edit', compact('pedido'));
+        return Inertia::render('Pedidos/Form', ['pedido' => PedidoResource::make($pedido->load('itens'))]);
     }
 
     public function store(SavePedidoRequest $request)

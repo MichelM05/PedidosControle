@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Models\Pedido;
-use Illuminate\Contracts\Validation\Validator;
 
 /**
  * Edição por seção dos dados do pedido (tudo, exceto os itens), usada pelos modais da tela de detalhes.
@@ -59,13 +58,5 @@ class AtualizarDadosPedidoRequest extends BaseRequest
             'total_ipi' => 'IPI total', 'total_produtos' => 'Total dos produtos', 'observacoes' => 'Observações',
             'nome' => 'Nome', 'endereco' => 'Endereço', 'cnpj' => 'CNPJ', 'ie' => 'IE', 'fone' => 'Fone',
         ];
-    }
-
-    /** Guarda qual modal estava aberto para reabri-lo com os erros. */
-    protected function failedValidation(Validator $validator): void
-    {
-        session()->flash('abrir_modal', $this->input('secao'));
-
-        parent::failedValidation($validator);
     }
 }
