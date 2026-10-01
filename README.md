@@ -85,6 +85,7 @@ docs/                                           # documentação detalhada
 
 - [docs/arquitetura.md](docs/arquitetura.md) — camadas, fluxo do upload, banco de dados e rotas
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
+- [docs/seguranca.md](docs/seguranca.md) — o que está protegido e o checklist antes de publicar
 - [docs/autenticacao.md](docs/autenticacao.md) — login, criar conta, perfil, usuários e como fechar o cadastro
 - [docs/controle-planilha.md](docs/controle-planilha.md) — a planilha de controle: colunas, cores, tela e exportação
 - [docs/interface.md](docs/interface.md) — front React: páginas, componentes, paleta e como estender
