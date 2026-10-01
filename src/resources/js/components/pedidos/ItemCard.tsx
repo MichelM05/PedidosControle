@@ -12,7 +12,15 @@ const Dado = ({ rotulo, children }: { rotulo: string; children: React.ReactNode 
 );
 
 /** Um item do pedido: valores, impostos e dados do serviço/entrega. */
-export default function ItemCard({ item, posicao, status, onEditarControle }: { item: Item; posicao: number; status: Record<string, string>; onEditarControle: () => void }) {
+interface Props {
+    item: Item;
+    posicao: number;
+    status: Record<string, string>;
+    onStatus: (novo: string) => void;
+    onEditarControle: () => void;
+}
+
+export default function ItemCard({ item, posicao, status, onStatus, onEditarControle }: Props) {
     const divergente =
         item.qtd !== null && item.preco !== null && item.vlr_tot !== null && Math.abs(Number(item.qtd) * Number(item.preco) - Number(item.vlr_tot)) >= 0.01;
 
@@ -32,12 +40,19 @@ export default function ItemCard({ item, posicao, status, onEditarControle }: { 
         <div className="rounded-lg border bg-card p-4 shadow-xs">
             <div className="mb-4 flex justify-between gap-4 border-b pb-3">
                 <div>
-                    <Badge className="bg-sage text-zinc-900 uppercase">Item {item.item ?? posicao}</Badge>
-                    {item.status && (
-                        <Badge variant="outline" className="ml-2 uppercase">
-                            {status[item.status] ?? item.status}
-                        </Badge>
-                    )}
+                    <Badge className="bg-sage text-ink uppercase">Item {item.item ?? posicao}</Badge>
+                    <select
+                        aria-label="Status do item"
+                        value={item.status ?? 'andamento'}
+                        onChange={(e) => onStatus(e.target.value)}
+                        className="ml-2 h-6 rounded-full border bg-background px-2 text-xs font-semibold uppercase outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
+                        {Object.entries(status).map(([chave, rotulo]) => (
+                            <option key={chave} value={chave}>
+                                {rotulo}
+                            </option>
+                        ))}
+                    </select>
                     <div className="mt-1 font-bold">{f.texto(item.denominacao)}</div>
                     {item.material && item.material !== item.denominacao && <div className="text-sm text-muted-foreground">Material: {item.material}</div>}
                 </div>

@@ -11,8 +11,8 @@ const CAMPOS = [
     { nome: 'numero', rotulo: 'Número' },
     { nome: 'cliente', rotulo: 'Cliente' },
     { nome: 'fornecedor', rotulo: 'Fornecedor' },
-    { nome: 'data_inicio', rotulo: 'Data inicial', type: 'date' },
-    { nome: 'data_fim', rotulo: 'Data final', type: 'date' },
+    { nome: 'data_inicio', rotulo: 'Pedido de (data)', type: 'date' },
+    { nome: 'data_fim', rotulo: 'Pedido até (data)', type: 'date' },
     { nome: 'valor_min', rotulo: 'Valor mín. (R$)', placeholder: 'Ex: 1000,00' },
     { nome: 'valor_max', rotulo: 'Valor máx. (R$)', placeholder: 'Ex: 5000,00' },
 ] as const;

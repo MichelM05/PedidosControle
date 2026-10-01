@@ -1,5 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
-import { Download } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import EditarSecao, { type Secao } from '@/components/pedidos/EditarSecao';
@@ -18,7 +17,7 @@ const Rotulo = ({ children }: { children: React.ReactNode }) => (
 );
 
 const BotaoEditar = ({ onClick, claro }: { onClick: () => void; claro?: boolean }) => (
-    <Button variant="link" size="xs" onClick={onClick} className={claro ? 'text-zinc-300 hover:text-white' : 'text-muted-foreground'}>
+    <Button variant="link" size="xs" onClick={onClick} className={claro ? 'text-band-foreground/80 hover:text-band-foreground' : 'text-muted-foreground'}>
         Editar
     </Button>
 );
@@ -31,6 +30,10 @@ export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotu
     const itens = pedido.itens ?? [];
 
     const soma = itens.reduce((total, i) => total + Number(i.vlr_tot ?? 0), 0);
+    const statusDoPedido = new Set(itens.map((i) => i.status));
+    const statusComum = statusDoPedido.size === 1 ? [...statusDoPedido][0] : '';
+    const mudarStatusDoPedido = (novo: string) => router.patch(rotas.statusPedido(pedido.id), { status: novo }, { preserveScroll: true });
+    const mudarStatusDoItem = (item: Item, novo: string) => router.patch(rotas.controleItem(item.id as number), { status: novo }, { preserveScroll: true });
     const diferenca = pedido.valor === null ? 0 : Math.abs(soma - Number(pedido.valor));
     const condicoes = Object.entries(rotulos.condicoes).filter(([chave]) => extras[chave as keyof typeof extras]);
 
@@ -53,21 +56,39 @@ export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotu
                                 </Button>
                             )}
                             <Button asChild variant="outline">
-                                <a href={rotas.exportarPedido(pedido.id)}>
-                                    <Download /> Exportar planilha
-                                </a>
-                            </Button>
-                            <Button asChild variant="outline">
                                 <Link href={rotas.editar(pedido.id)}>Editar</Link>
                             </Button>
                             <ExcluirPedido pedido={pedido} variant="destructive" />
                         </div>
                     </div>
 
-                    <h2 className="text-2xl font-extrabold">Detalhes do pedido</h2>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h2 className="text-2xl font-extrabold">Detalhes do pedido</h2>
+                        {itens.length > 0 && (
+                            <label className="flex items-center gap-2 text-sm font-semibold">
+                                Status do pedido
+                                <select
+                                    value={statusComum ?? ''}
+                                    onChange={(e) => e.target.value && mudarStatusDoPedido(e.target.value)}
+                                    className="h-9 rounded-md border border-input bg-background px-3 text-sm font-normal shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    {!statusComum && (
+                                        <option value="" disabled>
+                                            Vários (itens com status diferentes)
+                                        </option>
+                                    )}
+                                    {Object.entries(status).map(([chave, rotulo]) => (
+                                        <option key={chave} value={chave}>
+                                            {rotulo}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        )}
+                    </div>
 
                     {/* Resumo */}
-                    <div className="flex flex-wrap justify-between gap-4 rounded-xl bg-primary p-6 text-primary-foreground">
+                    <div className="flex flex-wrap justify-between gap-4 rounded-xl border bg-band p-6 text-band-foreground">
                         <div>
                             <span className="block text-[0.7rem] font-bold uppercase tracking-wide opacity-75">Pedido</span>
                             <span className="block text-2xl font-extrabold">nº {f.texto(pedido.numero)}</span>
@@ -76,7 +97,7 @@ export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotu
                         <div className="flex flex-col sm:items-end">
                             <BotaoEditar claro onClick={() => setSecao('resumo')} />
                             <span className="text-[0.7rem] font-bold uppercase tracking-wide opacity-75">Total</span>
-                            <span className="text-2xl font-extrabold text-brand-light">{f.moeda(pedido.valor)}</span>
+                            <span className="text-2xl font-extrabold">{f.moeda(pedido.valor)}</span>
                             <span className="text-sm opacity-85">
                                 {itens.length} {itens.length === 1 ? 'item' : 'itens'}
                             </span>
@@ -174,7 +195,7 @@ export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotu
                     ) : (
                         <div className="grid gap-4">
                             {itens.map((item, i) => (
-                                <ItemCard key={item.id ?? i} item={item} posicao={i + 1} status={status} onEditarControle={() => setItemControle(item)} />
+                                <ItemCard key={item.id ?? i} item={item} posicao={i + 1} status={status} onStatus={(novo) => mudarStatusDoItem(item, novo)} onEditarControle={() => setItemControle(item)} />
                             ))}
                         </div>
                     )}

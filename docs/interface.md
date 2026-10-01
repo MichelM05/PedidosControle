@@ -16,7 +16,8 @@ resources/js/
 │   ├── Field.tsx              # rótulo + campo + erro (padrão de todos os formulários)
 │   ├── ConfirmDialog.tsx      # modal de confirmação
 │   └── Paginacao.tsx
-├── layouts/AppLayout.tsx      # barra superior + mensagem de sucesso
+├── layouts/AppLayout.tsx      # barra superior (nome PedidosControle e abas Pedidos/Controle) + mensagem de sucesso
+├── lib/controle.ts            # cores e regras de prazo por situação (grade, lista e legenda)
 ├── lib/format.ts              # formatação pt-BR (moeda, data, cnpj...) — devolve "—" quando vazio
 ├── lib/routes.ts              # URLs da aplicação (espelham routes/web.php)
 └── types/index.ts             # tipos Pedido, Item, DadosExtras, Paginador...
@@ -27,17 +28,25 @@ O título da aba vem de `<Head title="...">` em cada página.
 
 ## Paleta
 
-Definida em `resources/css/app.css` (variáveis do shadcn); troque as cores só ali.
+As cores do projeto, definidas em `resources/css/app.css` (variáveis do shadcn); troque as cores só ali. O **laranja** é a identidade; o resto é
+fundo neutro claro, com as demais cores só em detalhes pequenos.
 
-- **Base neutra** (zinc): fundo, cards, bordas e textos. `--primary` é o grafite dos botões e faixas.
-- **Destaques**, com moderação: laranja `--brand` `#F56218` (linha do topo, "Processar PDF", borda dos itens do formulário),
-  laranja claro `--brand-light` (valor total) e verde-sálvia `--sage` (badge do item, alerta de sucesso).
-- `--destructive` (`#A63A0B`) para exclusão e erros; `--ring` (laranja claro) no foco dos campos.
-- Use sempre as classes semânticas (`bg-primary`, `text-muted-foreground`, `border-border`...), nunca hexadecimal solto.
+| Cor | Hex | Onde |
+|---|---|---|
+| Laranja | `#F56218` | barra do topo, botões principais, aba ativa de login — `bg-primary` |
+| Laranja claro | `#FF9D2E` | hover dos botões principais, foco dos campos |
+| Verde-sálvia | `#9DC9AC` | só detalhes: selos (badges) e borda do alerta de sucesso |
+| Oliva | `#919167` | só textos secundários e rótulos (versão escura `#6B6B4A`) |
+| Creme | `#FFFEC7` | definido, ainda sem uso de destaque |
+
+Fundo `#F7F7F4` (neutro claro), faixas de destaque (importar pedido, resumo do pedido) em cinza neutro `#ECECE7` (`bg-band`), cartões brancos, texto em oliva muito escuro (`--ink`, `#26261A`), bordas `#E4E2DA` e hover dos botões
+secundários em tom claro do laranja (`#FFE2C2`). `--destructive` (`#B91C1C`) é só para excluir e erros. As cores de situação/prazo da planilha
+estão em `docs/controle-planilha.md`.
+Use sempre as classes semânticas (`bg-primary`, `bg-band`, `text-muted-foreground`, `border-border`...), nunca hexadecimal solto.
 
 ## Telas
 
-- **Index** — `UploadCard` (envia o PDF), `Filtros` (GET com os filtros), tabela e `Paginacao`.
+- **Index** — "Importar pedido" (`UploadCard`), `Filtros` (GET com os filtros) e a tabela **Pedidos cadastrados**, com cada linha colorida pela situação/prazo (`lib/controle.ts`) e `LegendaCores`.
 - **Controle** — a planilha na web (somente leitura): abas por ano, filtros, grade (`GradeControle`) e exportação; clicar em uma linha abre o pedido. Veja [controle-planilha.md](controle-planilha.md).
 - **Show** — resumo, 4 blocos de endereço, condições, observações, conferência de totais (só aparece se divergir),
   itens (`ItemCard`) e texto extraído. Cada seção tem "Editar", que abre `EditarSecao` (modal com `PATCH /pedidos/{id}/dados`).

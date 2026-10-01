@@ -4,32 +4,46 @@
 /* Modo escuro só com a classe .dark (não segue o tema do sistema): a paleta do app é clara. */
 @custom-variant dark (&:is(.dark *));
 
-/* Paleta: base neutra (zinc) com acentos pontuais. Troque as cores só aqui. */
+/*
+ * Paleta do sistema: as cores do projeto como identidade, sobre fundo neutro claro.
+ *   laranja #F56218 (identidade: topo, botões, aba ativa) · laranja claro #FF9D2E (hover, destaque, foco)
+ *   verde-sálvia #9DC9AC e oliva #919167 (detalhes pequenos: selos, alerta de sucesso, textos secundários) · creme #FFFEC7 (toques sutis)
+ * Troque as cores só aqui.
+ */
 :root {
-    --background: #f4f4f5;
-    --foreground: #27272a;
+    --cream: #fffec7;
+    --sage: #9dc9ac;
+    --orange: #f56218;
+    --orange-light: #ff9d2e;
+    --olive: #919167;
+    --ink: #26261a; /* texto: oliva muito escuro */
+
+    --background: #f7f7f4; /* fundo neutro claro */
+    --foreground: var(--ink);
     --card: #ffffff;
-    --card-foreground: #27272a;
+    --card-foreground: var(--ink);
     --popover: #ffffff;
-    --popover-foreground: #27272a;
-    --primary: #27272a;
-    --primary-foreground: #ffffff;
-    --secondary: #f4f4f5;
-    --secondary-foreground: #27272a;
-    --muted: #fafafa;
-    --muted-foreground: #71717a;
-    --accent: #d4d4d8;
-    --accent-foreground: #27272a;
+    --popover-foreground: var(--ink);
+    --primary: var(--orange); /* ação principal e barra do topo */
+    --primary-foreground: var(--ink);
+    --secondary: #ffffff;
+    --secondary-foreground: var(--ink);
+    --muted: #faf9f5;
+    --muted-foreground: #6b6b4a; /* oliva escuro */
+    --accent: #ffe2c2; /* hover: tom do laranja claro */
+    --accent-foreground: var(--ink);
     --destructive: #b91c1c;
-    --border: #e4e4e7;
-    --input: #e4e4e7;
-    --ring: #ff9d2e;
+    --border: #e4e2da;
+    --input: #d6d3c8;
+    --ring: var(--orange-light);
     --radius: 0.75rem;
 
-    /* Destaques */
-    --brand: #f56218;
-    --brand-light: #ff9d2e;
-    --sage: #9dc9ac;
+    /* Faixas de destaque (card de importação e resumo do pedido): cinza neutro */
+    --band: #ecece7;
+    --band-foreground: var(--ink);
+
+    --brand: var(--orange);
+    --brand-light: var(--orange-light);
 }
 
 @theme inline {
@@ -54,6 +68,11 @@
     --color-ring: var(--ring);
     --color-brand: var(--brand);
     --color-brand-light: var(--brand-light);
+    --color-olive: var(--olive);
+    --color-cream: var(--cream);
+    --color-band: var(--band);
+    --color-band-foreground: var(--band-foreground);
+    --color-ink: var(--ink);
     --color-sage: var(--sage);
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);

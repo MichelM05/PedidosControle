@@ -1,5 +1,12 @@
 /** URLs da aplicação (espelham routes/web.php). */
 export const rotas = {
+    login: '/login',
+    registro: '/registro',
+    logout: '/logout',
+    perfil: '/perfil',
+    perfilSenha: '/perfil/senha',
+    usuarios: '/usuarios',
+    usuario: (id: number) => `/usuarios/${id}`,
     index: '/',
     upload: '/upload',
     criar: '/pedidos/create',
@@ -10,7 +17,7 @@ export const rotas = {
     dados: (id: number) => `/pedidos/${id}/dados`,
     pdf: (id: number) => `/pedidos/${id}/pdf`,
     excluir: (id: number) => `/pedidos/${id}`,
-    exportarPedido: (id: number) => `/pedidos/${id}/exportar`,
+    statusPedido: (id: number) => `/pedidos/${id}/status`,
     controle: '/controle',
     controleExportar: (ano?: number) => (ano ? `/controle/exportar?ano=${ano}` : '/controle/exportar'),
     controleItem: (id: number) => `/controle/itens/${id}`,

@@ -3,6 +3,8 @@ import { Download } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import GradeControle from '@/components/controle/GradeControle';
+import LegendaCores from '@/components/LegendaCores';
+import type { Cores, Prazos } from '@/lib/controle';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout';
 import { rotas } from '@/lib/routes';
@@ -18,13 +20,13 @@ interface Props {
     colunas: ColunaControle[];
     status: Record<string, string>;
     responsaveis: string[];
-    diasAlerta: number;
-    cores: { linha: string; entregue: string; finalizado: string; prazo: string };
+    prazos: Prazos;
+    cores: Cores;
 }
 
 const selectClasse = 'h-9 rounded-md border bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
-export default function Index({ ano, anos, filtros, linhas, totais, colunas, status, responsaveis, diasAlerta, cores }: Props) {
+export default function Index({ ano, anos, filtros, linhas, totais, colunas, status, responsaveis, prazos, cores }: Props) {
     const [busca, setBusca] = useState(filtros.q ?? '');
     const [mostrarOcultas, setMostrarOcultas] = useState(false);
     const primeira = useRef(true);
@@ -111,7 +113,7 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
                 </select>
                 <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={!!filtros.ocultar_entregues} onChange={(e) => filtrar({ ocultar_entregues: e.target.checked ? 1 : undefined })} />
-                    Ocultar entregues
+                    Ocultar entregues e cancelados
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={mostrarOcultas} onChange={(e) => setMostrarOcultas(e.target.checked)} />
@@ -119,21 +121,9 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
                 </label>
             </div>
 
-            <GradeControle linhas={linhas} colunas={colunas} status={status} cores={cores} diasAlerta={diasAlerta} mostrarOcultas={mostrarOcultas} />
+            <GradeControle linhas={linhas} colunas={colunas} status={status} cores={cores} prazos={prazos} mostrarOcultas={mostrarOcultas} />
 
-            {/* Legenda das cores das linhas */}
-            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
-                {[
-                    [cores.entregue, 'Entregue'],
-                    [cores.finalizado, 'Finalizado'],
-                    [cores.prazo, `Entrega em até ${diasAlerta} dias (ou atrasada)`],
-                    [cores.linha, 'Em andamento'],
-                ].map(([cor, rotulo]) => (
-                    <li key={rotulo} className="flex items-center gap-1.5">
-                        <span className="inline-block size-3 rounded-sm border border-zinc-400" style={{ background: `#${cor}` }} /> {rotulo}
-                    </li>
-                ))}
-            </ul>
+            <LegendaCores cores={cores} prazos={prazos} />
         </AppLayout>
     );
 }

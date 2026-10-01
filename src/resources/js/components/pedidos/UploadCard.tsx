@@ -16,24 +16,24 @@ export default function UploadCard() {
     };
 
     return (
-        <section className="relative mb-8 overflow-hidden rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8">
-            <FileText className="absolute top-4 right-4 hidden size-24 text-white/10 sm:block" aria-hidden />
+        <section className="relative mb-8 overflow-hidden rounded-2xl border bg-band p-6 text-band-foreground shadow-sm sm:p-8">
+            <FileText className="absolute top-4 right-4 hidden size-24 text-black/10 sm:block" aria-hidden />
 
-            <h2 className="mb-2 text-2xl font-extrabold">Importar pedido em PDF</h2>
-            <p className="mb-4 max-w-3xl text-sm text-zinc-300">
+            <h2 className="mb-2 text-2xl font-extrabold">Importar pedido</h2>
+            <p className="mb-4 max-w-3xl text-sm">
                 A importação extrai do PDF: número do pedido, data, cliente, fornecedor, valor total, endereços, condições comerciais e
                 itens detalhados (quantidade, preço, impostos, data de entrega, item de lei, tipo de manutenção e local da prestação).
             </p>
 
             <form
-                className="grid max-w-xl gap-4 rounded-2xl border border-white/20 bg-white/10 p-5"
+                className="grid max-w-xl gap-4 rounded-2xl border bg-white/70 p-5"
                 onSubmit={(e) => {
                     e.preventDefault();
                     form.post(rotas.upload, { forceFormData: true });
                 }}
             >
                 <div className="flex flex-wrap items-center gap-3">
-                    <Button asChild variant="secondary" size="lg" className="cursor-pointer bg-white text-zinc-900 hover:bg-zinc-100">
+                    <Button asChild variant="secondary" size="lg" className="cursor-pointer border bg-white text-ink hover:bg-accent">
                         <label htmlFor="pdf">
                             <Plus /> {form.data.pdf ? 'Trocar arquivo' : 'Selecione o PDF'}
                         </label>
@@ -50,22 +50,22 @@ export default function UploadCard() {
                         <div className="flex items-center gap-2 font-bold">
                             <span className="truncate">{form.data.pdf ? form.data.pdf.name : 'Nenhum arquivo selecionado'}</span>
                             {form.data.pdf && (
-                                <button type="button" onClick={limpar} aria-label="Remover arquivo" className="rounded-full bg-white/20 p-0.5 hover:bg-destructive">
+                                <button type="button" onClick={limpar} aria-label="Remover arquivo" className="rounded-full bg-black/15 p-0.5 hover:bg-destructive hover:text-white">
                                     <X className="size-4" />
                                 </button>
                             )}
                         </div>
-                        <span className="text-xs text-zinc-400">No momento aceitamos apenas arquivos .PDF</span>
+                        <span className="text-xs opacity-75">No momento aceitamos apenas arquivos .PDF</span>
                     </div>
                 </div>
 
-                {form.errors.pdf && <p className="text-sm font-semibold text-orange-300">{form.errors.pdf}</p>}
+                {form.errors.pdf && <p className="text-sm font-semibold text-destructive">{form.errors.pdf}</p>}
 
                 <div className="flex flex-wrap gap-3">
-                    <Button type="submit" disabled={!form.data.pdf || form.processing} className="bg-brand text-zinc-900 hover:bg-brand-light">
+                    <Button type="submit" disabled={!form.data.pdf || form.processing}>
                         {form.processing ? 'Processando...' : 'Processar PDF'}
                     </Button>
-                    <Button asChild variant="outline" className="border-zinc-500 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                    <Button asChild variant="outline" className="border-ink/50 bg-transparent text-ink hover:border-ink hover:bg-white/50">
                         <Link href={rotas.criar}>Criar pedido manual</Link>
                     </Button>
                 </div>

@@ -65,6 +65,11 @@ export interface Pedido {
     fornecedor: string | null;
     valor: string | null;
     itens_count?: number;
+    /** Situação do pedido pelos status dos itens e entrega mais próxima dos itens em andamento (só na lista). */
+    status_geral?: string;
+    proxima_entrega?: string | null;
+    /** Data de entrega mostrada na lista: a mais próxima dos itens em andamento ou, sem nenhum, a última. */
+    data_entrega?: string | null;
     itens?: Item[];
     dados_extras?: DadosExtras;
     texto_bruto?: string | null;
@@ -88,7 +93,17 @@ export interface Rotulos {
 }
 
 /** Props compartilhadas por todas as páginas (HandleInertiaRequests). */
+export interface Usuario {
+    id: number;
+    name: string;
+    email: string;
+    is_admin: boolean;
+    ativo?: boolean;
+    created_at?: string;
+}
+
 export interface PageProps {
+    auth: { user: Usuario | null };
     flash: { success?: string | null };
     errors: Record<string, string>;
     [key: string]: unknown;
