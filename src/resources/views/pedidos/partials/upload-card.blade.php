@@ -5,18 +5,18 @@
         </svg>
     </div>
 
-    <h2 class="upload-card-title">Transforme seu PDF</h2>
-    <p class="upload-card-description">A importação extrai dados como PDF: número do pedido, data, cliente, fornecedor,
-        valor total e itens detalhados (material, denominação, quantidade, unidade, preço unitário, valor total, ICMS e
-        IPI).</p>
+    <h2 class="upload-card-title">Importar pedido em PDF</h2>
+    <p class="upload-card-description">A importação extrai do PDF: número do pedido, data, cliente, fornecedor,
+        valor total e itens detalhados (material, denominação, quantidade, unidade, preço, valor total, impostos,
+        data de entrega, item de lei, tipo de manutenção e local da prestação).</p>
 
     <form action="{{ route('pedidos.upload') }}" method="POST" enctype="multipart/form-data" class="upload-form">
         @csrf
 
         <div class="file-upload-wrapper mb-6">
             <label for="pdf" id="file-label" class="upload-label" data-original-text="Selecione o PDF">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                Selecione o PDF
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span id="file-label-text">Selecione o PDF</span>
             </label>
             <input type="file" name="pdf" id="pdf" accept=".pdf" required>
             <div class="upload-info">
@@ -27,13 +27,12 @@
         </div>
 
         <div class="flex gap-4 items-center">
-            <button type="submit" class="upload-submit-btn">
+            <button type="submit" id="btn-submit" class="upload-submit-btn" data-loading-text="Processando...">
                 Processar PDF
             </button>
 
-            <a href="{{ route('pedidos.create') }}" class="upload-submit-btn"
-               style="background-color: rgba(255,255,255,0.2); text-decoration: none;">
-                Criar Pedido
+            <a href="{{ route('pedidos.create') }}" class="upload-submit-btn upload-submit-btn-outline">
+                Criar pedido manual
             </a>
         </div>
 

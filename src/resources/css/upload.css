@@ -1,15 +1,14 @@
 /* Estilo específico para a tela de upload de pedidos - CSS Puro */
 .upload-card-container {
-    background: linear-gradient(to bottom right, var(--blue-600), var(--indigo-700));
+    background-color: var(--accent);
     color: white;
     overflow: hidden;
     position: relative;
     border-radius: 1rem;
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    transition: box-shadow 0.2s;
-    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--accent);
 }
 
 .upload-card-icon {
@@ -32,7 +31,7 @@
 }
 
 .upload-card-description {
-    color: var(--blue-100);
+    color: var(--tone-300);
     max-width: 90%;
     margin-bottom: 1rem;
 }
@@ -40,12 +39,12 @@
 .upload-form {
     position: relative;
     z-index: 10;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgb(255 255 255 / 0.08);
     padding: 1.5rem;
     border-radius: 1rem;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgb(255 255 255 / 0.18);
     max-width: 80%;
     /* Flexbox para alinhar tudo em coluna */
     display: flex;
@@ -63,14 +62,18 @@
     cursor: pointer;
     border: 0;
     text-align: center;
-    background-color: white;
-    color: var(--blue-600);
+    background-color: var(--surface);
+    color: var(--ink);
     padding: 1rem 2rem;
     font-size: 1rem;
 }
 
 .upload-label:hover {
-    background-color: var(--blue-50);
+    background-color: var(--tone-50);
+}
+
+.upload-label.is-selected {
+    background-color: var(--highlight);
 }
 
 .upload-info {
@@ -86,29 +89,44 @@
 
 .upload-hint {
     font-size: 0.75rem;
-    color: var(--blue-200);
+    color: var(--tone-400);
 }
 
 .upload-submit-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.75rem;
-    font-weight: 700;
-    transition: all 0.2s;
-    cursor: pointer;
-    border: 0;
-    text-align: center;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-weight: 600;
     font-size: 0.875rem;
-    background-color: var(--blue-500);
-    color: white;
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-align: center;
+    background-color: var(--orange);
+    color: var(--ink);
     width: 100%;
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    padding: 0.75rem 2.5rem;
+    padding: 0.75rem 2rem;
+    transition: background-color 0.15s, border-color 0.15s;
 }
 
-.upload-submit-btn:hover {
-    background-color: var(--blue-400);
+.upload-submit-btn:hover:not(:disabled) {
+    background-color: var(--orange-light);
+}
+
+.upload-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.upload-submit-btn-outline {
+    background-color: transparent;
+    border-color: var(--tone-500);
+    color: white;
+}
+
+.upload-submit-btn-outline:hover:not(:disabled) {
+    background-color: rgb(255 255 255 / 0.1);
 }
 
 @media (min-width: 640px) {
@@ -124,10 +142,6 @@
     padding: 10px 0; /* Removido o padding lateral (10px) para alinhar com o botão abaixo */
 }
 
-.mb-6 {
-    margin-bottom: 1.5rem;
-}
-
 /* Esconde o input feio do navegador */
 #pdf {
     display: none;
@@ -141,7 +155,7 @@
 
 /* Botão de remover arquivo */
 .btn-remove {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(255 255 255 / 0.2);
     color: white;
     border: none;
     border-radius: 50%;
@@ -157,8 +171,51 @@
 }
 
 .btn-remove:hover {
-    background: #ef4444;
+    background: var(--danger);
+    color: white;
 }
 
 .w-32 { width: 8rem; }
 .h-32 { height: 8rem; }
+
+/* Telas pequenas: o formulário ocupa toda a largura e os blocos empilham */
+@media (max-width: 639px) {
+    .upload-card-icon {
+        display: none;
+    }
+
+    .upload-card-description {
+        max-width: 100%;
+    }
+
+    .upload-form {
+        max-width: 100%;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .file-upload-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    .upload-label {
+        padding: 0.875rem 1rem;
+    }
+
+    .upload-form > .flex {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .upload-submit-btn {
+        width: 100%;
+    }
+
+    .btn-remove {
+        align-self: flex-end;
+    }
+}

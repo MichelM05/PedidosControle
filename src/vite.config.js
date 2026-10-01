@@ -9,8 +9,9 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/css/upload.css',
                 'resources/js/upload.js',
-                'resources/css/pedidos/create.css',
-                'resources/js/pedidos/create.js'
+                'resources/css/pedidos/form.css',
+                'resources/js/pedidos/form.js',
+                'resources/css/pedidos/show.css',
             ],
             refresh: true,
         }),

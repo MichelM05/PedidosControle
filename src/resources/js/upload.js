@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const input = document.getElementById('pdf');
     const fileNameDisplay = document.getElementById('file-name');
     const fileLabel = document.getElementById('file-label'); // Label
+    const fileLabelText = document.getElementById('file-label-text'); // Texto dentro do label
+    const form = input ? input.closest('form') : null;
+    const btnSubmit = document.getElementById('btn-submit');
     const btnRemove = document.getElementById('btn-remove'); // Botão X
 
     // 1. Quando o arquivo mudar (selecionar)
@@ -11,9 +14,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Muda o nome exibido
                 fileNameDisplay.textContent = this.files[0].name;
                 // Muda o texto do LABEL
-                fileLabel.style.color = "#FFF   ";
-                fileLabel.textContent = "Arquivo selecionado";
-                fileLabel.style.backgroundColor = "#10b981"; // Muda cor do label pra verde
+                fileLabelText.textContent = "Arquivo selecionado";
+                fileLabel.classList.add('is-selected');
                 // Mostra o botão "X"
                 btnRemove.style.display = "inline-block";
             }
@@ -28,12 +30,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Volta os textos ao normal usando os atributos de dados (centralizado no Blade)
             fileNameDisplay.textContent = fileNameDisplay.getAttribute('data-original-text');
-            fileLabel.textContent = fileLabel.getAttribute('data-original-text');
-            fileLabel.style.backgroundColor = ""; // Volta a cor original
-            fileLabel.style.color = "";
+            fileLabelText.textContent = fileLabel.getAttribute('data-original-text');
+            fileLabel.classList.remove('is-selected');
 
             // Esconde o botão "X" novamente
             this.style.display = "none";
+        });
+    }
+
+    // 3. Mostra que o PDF está sendo processado (o bloqueio de envio duplicado está em ui.js)
+    if (form && btnSubmit) {
+        form.addEventListener('submit', function() {
+            btnSubmit.textContent = btnSubmit.dataset.loadingText;
         });
     }
 });
