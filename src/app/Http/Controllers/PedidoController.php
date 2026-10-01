@@ -2,91 +2,96 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchPedidoRequest;
+use App\Http\Requests\AtualizarDadosPedidoRequest;
 use App\Http\Requests\SavePedidoRequest;
+use App\Http\Requests\SearchPedidoRequest;
+use App\Http\Requests\UploadPedidoRequest;
 use App\Models\Pedido;
-use App\Models\PedidoItem;
-use App\Helpers\UtilsNormalizarNumero;
+use App\Services\PedidoService;
 use App\Services\PedidoUploadService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Smalot\PdfParser\Parser;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class PedidoController extends Controller
 {
+    public function __construct(private PedidoService $pedidos) {}
+
     public function index(SearchPedidoRequest $request)
     {
-        $pedidos = Pedido::search($request->validated())->paginate(15);
         $filtros = $request->validated();
+        $pedidos = Pedido::search($filtros)->paginate(15)->withQueryString();
+
         return view('pedidos.index', compact('pedidos', 'filtros'));
     }
 
     public function show(Pedido $pedido)
     {
         $pedido->load('itens');
+
         return view('pedidos.show', compact('pedido'));
     }
 
     public function create()
     {
-        $pedido = new Pedido();
-        return view('pedidos.create', compact('pedido'));
+        return view('pedidos.create', ['pedido' => new Pedido]);
     }
 
     public function edit(Pedido $pedido)
     {
         $pedido->load('itens');
+
         return view('pedidos.edit', compact('pedido'));
     }
 
-    /**
-     * @throws \Throwable
-     */
-    public function save(SavePedidoRequest $request, $id = null)
+    public function store(SavePedidoRequest $request)
     {
-        $dadosValidados = $request->validated();
+        $pedido = $this->pedidos->salvar(new Pedido, $request->safe()->except('itens'), $request->input('itens', []));
 
-        return DB::transaction(function () use ($request, $id, $dadosValidados) {
-
-            //Buscar ou Criar o Pedido
-            $pedido = $id ? Pedido::findOrFail($id) : new Pedido();
-
-            $pedido->fill($dadosValidados);
-            $pedido->save();
-
-            //Lógica de Itens (Sincronização)
-            if ($request->has('itens')) {
-                // Se for uma edição, uma estratégia simples é remover os antigos e salvar os novos
-                if ($id) {
-                    $pedido->itens()->delete();
-                }
-
-                foreach ($request->itens as $itemDados) {
-                    $pedido->itens()->create($itemDados);
-                }
-            }
-
-            $mensagem = $id ? 'Pedido atualizado com sucesso!' : 'Pedido criado com sucesso!';
-            return redirect()->route('pedidos.show', compact('pedido'))->with('success', $mensagem);
-        });
+        return redirect()->route('pedidos.show', $pedido)->with('success', 'Pedido criado com sucesso!');
     }
 
-    public function delete(Pedido $pedido)
+    public function update(SavePedidoRequest $request, Pedido $pedido)
+    {
+        $this->pedidos->salvar($pedido, $request->safe()->except('itens'), $request->input('itens', []));
+
+        return redirect()->route('pedidos.show', $pedido)->with('success', 'Pedido atualizado com sucesso!');
+    }
+
+    /** Edição por seção dos modais da tela de detalhes (não altera os itens). */
+    public function atualizarDados(AtualizarDadosPedidoRequest $request, Pedido $pedido)
+    {
+        $this->pedidos->atualizarSecao($pedido, $request->validated('secao'), $request->safe()->except('secao'));
+
+        return redirect()->route('pedidos.show', $pedido)->with('success', 'Dados atualizados.');
+    }
+
+    public function destroy(Pedido $pedido)
     {
         $pedido->delete();
 
         return redirect()->route('pedidos.index')->with('success', 'Pedido excluído com sucesso!');
     }
 
-    public function upload(Request $request, PedidoUploadService $service)
+    /** Exibe o PDF original importado, para conferência dos dados. */
+    public function pdf(Pedido $pedido)
     {
-        $request->validate(['pdf' => 'required|mimes:pdf']);
+        abort_unless($pedido->arquivo_pdf && Storage::exists($pedido->arquivo_pdf), 404, 'PDF original não disponível.');
 
+        return Storage::response($pedido->arquivo_pdf, 'pedido-'.($pedido->numero ?? $pedido->id).'.pdf', [
+            'Content-Type' => 'application/pdf',
+        ], 'inline');
+    }
+
+    public function upload(UploadPedidoRequest $request, PedidoUploadService $service)
+    {
         try {
             $pedido = $service->processarUpload($request->file('pdf'));
-            return redirect()->route('pedidos.show', $pedido)->with('success', 'Pedido importado!');
-        } catch (\Exception $e) {
-            return back()->withErrors(['pdf' => 'Erro ao processar: ' . $e->getMessage()]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['pdf' => 'Erro ao processar o PDF: '.$e->getMessage()]);
         }
+
+        return redirect()->route('pedidos.show', $pedido)->with('success', 'Pedido importado!');
     }
 }
