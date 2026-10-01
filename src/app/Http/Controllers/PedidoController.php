@@ -35,6 +35,7 @@ class PedidoController extends Controller
         return Inertia::render('Pedidos/Show', [
             'pedido' => PedidoResource::make($pedido->load('itens')),
             'rotulos' => ['blocos' => Pedido::BLOCOS, 'condicoes' => Pedido::CONDICOES],
+            'status' => PedidoItem::STATUS,
         ]);
     }
 

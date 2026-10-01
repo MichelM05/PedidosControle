@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AtualizarItemControleRequest;
+use App\Http\Requests\AtualizarControleItemRequest;
 use App\Http\Requests\FiltroControleRequest;
 use App\Http\Resources\ControleLinhaResource;
 use App\Models\Pedido;
@@ -14,7 +14,7 @@ use Inertia\Inertia;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Controle de pedidos em formato de planilha: grade por ano, edição por célula e exportação .xlsx. */
+/** Controle de pedidos em formato de planilha: grade por ano (consulta) e exportação .xlsx. A edição é na tela do pedido. */
 class ControleController extends Controller
 {
     public function __construct(private ControleService $controle, private PlanilhaControleExporter $exportador) {}
@@ -46,12 +46,12 @@ class ControleController extends Controller
         ]);
     }
 
-    /** Salva uma célula da grade. */
-    public function atualizar(AtualizarItemControleRequest $request, PedidoItem $item)
+    /** Salva o controle de produção de um item (a edição é feita na tela do pedido, não na grade). */
+    public function atualizar(AtualizarControleItemRequest $request, PedidoItem $item)
     {
-        $item->update([$request->validated('campo') => $request->validated('valor')]);
+        $item->update($request->validated());
 
-        return back();
+        return redirect()->route('pedidos.show', $item->pedido_id)->with('success', 'Controle do item atualizado.');
     }
 
     /** Planilha de um ano (?ano=2026) ou de todos os anos, uma aba por ano. */

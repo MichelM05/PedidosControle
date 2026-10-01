@@ -78,30 +78,49 @@ class ControleTest extends TestCase
         $this->get(route('controle.index', ['status' => 'invalido']))->assertSessionHasErrors('status');
     }
 
-    public function test_edita_celulas_da_grade_e_valida(): void
+    public function test_edita_o_controle_do_item_e_volta_para_a_tela_do_pedido(): void
     {
-        $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a']]);
+        $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'usinagem' => 'antiga']]);
+        $item = $pedido->itens->first();
+
+        $this->patch(route('controle.atualizar', $item), [
+            'status' => 'finalizado', 'responsavel' => 'Jorge', 'cidade_entrega' => 'Curitiba',
+            'dt_entrega' => '2026-05-01', 'usinagem' => '', 'solda' => '12/03/2026', 'compra_mp' => 'recebido 02/09',
+        ])->assertRedirect(route('pedidos.show', $pedido))->assertSessionHas('success');
+
+        $item->refresh();
+        $this->assertSame('finalizado', $item->status);
+        $this->assertSame('Jorge', $item->responsavel);
+        $this->assertSame('Curitiba', $item->cidade_entrega);
+        $this->assertSame('2026-05-01', $item->dt_entrega->format('Y-m-d'));
+        $this->assertNull($item->usinagem);
+        $this->assertSame('12/03/2026', $item->solda);
+        $this->assertSame('a', $item->denominacao); // só o controle é editável aqui
+    }
+
+    public function test_edicao_do_controle_valida_status_e_nao_altera_outros_campos(): void
+    {
+        $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'qtd' => 5]]);
         $item = $pedido->itens->first();
         $url = route('controle.atualizar', $item);
 
-        $this->patch($url, ['campo' => 'usinagem', 'valor' => '12/03/2026'])->assertSessionHasNoErrors();
-        $this->patch($url, ['campo' => 'qtd', 'valor' => '7.5']);
-        $this->patch($url, ['campo' => 'dt_entrega', 'valor' => '2026-05-01']);
-        $this->patch($url, ['campo' => 'status', 'valor' => 'finalizado']);
+        $this->patch($url, ['status' => 'qualquer'])->assertSessionHasErrors('status');
+        $this->patch($url, ['status' => ''])->assertSessionHasErrors('status');
+        $this->patch($url, ['status' => 'andamento', 'dt_entrega' => 'abc'])->assertSessionHasErrors('dt_entrega');
+
+        $this->patch($url, ['status' => 'andamento', 'qtd' => 99, 'pedido_id' => 9, 'denominacao' => 'hack']);
         $item->refresh();
-        $this->assertSame('12/03/2026', $item->usinagem);
-        $this->assertSame('7.5000', $item->qtd);
-        $this->assertSame('2026-05-01', $item->dt_entrega->format('Y-m-d'));
-        $this->assertSame('finalizado', $item->status);
+        $this->assertSame('5.0000', $item->qtd);
+        $this->assertSame($pedido->id, $item->pedido_id);
+        $this->assertSame('a', $item->denominacao);
+    }
 
-        $this->patch($url, ['campo' => 'usinagem', 'valor' => ''])->assertSessionHasNoErrors();
-        $this->assertNull($item->refresh()->usinagem);
+    public function test_tela_do_pedido_envia_as_opcoes_de_status_e_o_controle_dos_itens(): void
+    {
+        $pedido = $this->pedido('100', '2026-02-01', [['denominacao' => 'a', 'status' => 'finalizado', 'responsavel' => 'Jorge']]);
 
-        $this->patch($url, ['campo' => 'qtd', 'valor' => 'abc'])->assertSessionHasErrors('valor');
-        $this->patch($url, ['campo' => 'status', 'valor' => 'qualquer'])->assertSessionHasErrors('valor');
-        $this->patch($url, ['campo' => 'status', 'valor' => ''])->assertSessionHasErrors('valor');
-        $this->patch($url, ['campo' => 'pedido_id', 'valor' => '9'])->assertSessionHasErrors('campo');
-        $this->assertSame($pedido->id, $item->refresh()->pedido_id);
+        $this->get(route('pedidos.show', $pedido))->assertInertia(fn (Assert $page) => $page
+            ->has('status', 3)->where('pedido.itens.0.status', 'finalizado')->where('pedido.itens.0.responsavel', 'Jorge'));
     }
 
     public function test_exporta_a_planilha_no_formato_do_modelo(): void
