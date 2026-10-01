@@ -11,8 +11,8 @@ resources/js/
 ├── pages/Pedidos/             # uma página por tela: Index, Show, Form (criar e editar)
 ├── components/
 │   ├── ui/                    # shadcn (button, card, dialog, table...) — gerados, evite editar
-│   ├── controle/              # GradeControle (a grade) e Celula (edição por célula)
-│   ├── pedidos/               # componentes do domínio: UploadCard, Filtros, ItemCard, ItemFormCard, EditarSecao, ExcluirPedido
+│   ├── controle/              # GradeControle (a grade da planilha, somente leitura)
+│   ├── pedidos/               # componentes do domínio: UploadCard, Filtros, ItemCard, ItemFormCard, EditarSecao, EditarControleItem, ExcluirPedido
 │   ├── Field.tsx              # rótulo + campo + erro (padrão de todos os formulários)
 │   ├── ConfirmDialog.tsx      # modal de confirmação
 │   └── Paginacao.tsx
@@ -38,7 +38,7 @@ Definida em `resources/css/app.css` (variáveis do shadcn); troque as cores só 
 ## Telas
 
 - **Index** — `UploadCard` (envia o PDF), `Filtros` (GET com os filtros), tabela e `Paginacao`.
-- **Controle** — a planilha na web: abas por ano, filtros, grade editável (`GradeControle` + `Celula`) e exportação. Veja [controle-planilha.md](controle-planilha.md).
+- **Controle** — a planilha na web (somente leitura): abas por ano, filtros, grade (`GradeControle`) e exportação; clicar em uma linha abre o pedido. Veja [controle-planilha.md](controle-planilha.md).
 - **Show** — resumo, 4 blocos de endereço, condições, observações, conferência de totais (só aparece se divergir),
   itens (`ItemCard`) e texto extraído. Cada seção tem "Editar", que abre `EditarSecao` (modal com `PATCH /pedidos/{id}/dados`).
 - **Form** — criar e editar com os itens (`ItemFormCard`: adicionar, remover e minimizar). Itens são opcionais.

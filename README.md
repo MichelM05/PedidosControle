@@ -6,7 +6,7 @@ Aplicação **Laravel + React** (Inertia, TypeScript, Tailwind e shadcn/ui) que 
 
 - Envie um PDF → o sistema lê o texto, cria o pedido e guarda o PDF original.
 - A tela de detalhes mostra o que foi extraído, avisa quando os totais não batem e abre o PDF original.
-- A tela **Controle** reproduz a planilha CONTROLE DE PEDIDOS (um item por linha, abas por ano, mesmas colunas e cores), editável na própria grade, e **exporta para Excel** no mesmo formato.
+- A tela **Controle** reproduz a planilha CONTROLE DE PEDIDOS (um item por linha, abas por ano, mesmas colunas e cores) e **exporta para Excel** no mesmo formato. Clicar em uma linha abre o pedido, onde o controle de produção é editado.
 - Cabeçalho e blocos de endereço são editáveis por **modais** na própria tela; os itens, pelo formulário.
 - Pedidos também podem ser criados manualmente.
 
@@ -35,7 +35,7 @@ cd src && npm install && npm run build             # 5. front React (rode de nov
 2. Na tela do pedido confira os dados. Use **Abrir PDF original** para comparar lado a lado.
 3. Corrija o que for preciso: **Editar** em cada seção (modal) ou **Editar** no topo (itens).
 4. Na lista, filtre por número, cliente, fornecedor, data e valor.
-5. Em **Controle**, acompanhe a produção item a item (etapas, responsável e status) e use **Exportar** para gerar a planilha. Detalhes em [docs/controle-planilha.md](docs/controle-planilha.md).
+5. Em **Controle**, acompanhe a produção item a item (etapas, responsável e status), clique numa linha para abrir o pedido e editar o controle (**Editar controle** em cada item) e use **Exportar** para gerar a planilha. Detalhes em [docs/controle-planilha.md](docs/controle-planilha.md).
 
 ## Comandos úteis
 

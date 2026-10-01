@@ -1,7 +1,7 @@
 # Controle de pedidos (planilha)
 
 O sistema reproduz a planilha interna **CONTROLE DE PEDIDOS**: uma linha por **item de pedido**, uma aba por ano.
-A tela **Controle** mostra essa planilha na web (editável) e a exportação gera o `.xlsx` no mesmo formato.
+A tela **Controle** mostra essa planilha na web (somente leitura) e a exportação gera o `.xlsx` no mesmo formato. A edição é feita na tela do pedido.
 
 ## Colunas
 
@@ -12,10 +12,10 @@ Definidas em um só lugar, `app/Support/ColunasControle.php`, usado pela tela e 
 | PEDIDO *(oculta)* | — | sem equivalente no sistema; sai vazia e oculta |
 | CLIENTE *(oculta)* | cliente do pedido | oculta, como na planilha |
 | O.C CLIENTE | número do pedido (do PDF) | número quando só tem dígitos; texto se não ("verbal") |
-| DESCRIÇÃO PRODUTO | denominação do item | editável na grade |
-| QUANT. | quantidade do item | editável |
-| DATA DE ENTREGA | `Dt. Entrega` do item | editável |
-| CIDADE ENTREGA | local da prestação sem a UF | preenchida na importação ("Ponta Grossa PR" → "Ponta Grossa"); editável |
+| DESCRIÇÃO PRODUTO | denominação do item | edite no formulário do pedido |
+| QUANT. | quantidade do item | edite no formulário do pedido |
+| DATA DE ENTREGA | `Dt. Entrega` do item | editável em "Editar controle" |
+| CIDADE ENTREGA | local da prestação sem a UF | preenchida na importação ("Ponta Grossa PR" → "Ponta Grossa"); editável em "Editar controle" |
 | DESENHO NESTING, COMPRA M.P, COMPRA INSUMO, USINAGEM, CORTE E/OU DOBRA, SOLDA, PINTURA, MONTAGEM | **controle interno** (não vem do PDF) | texto livre ou data: "recebido 02/09", "12/03/2026", "xxxxx" |
 | RESPONSÁVEL | controle interno | texto |
 | STATUS | controle interno | Andamento, Finalizado ou Entregue (padrão: Andamento) |
@@ -45,11 +45,17 @@ e azul-acinzentado `#D6DCE4` (status). As cores ficam em constantes de `ColunasC
 
 ## Tela Controle (`/controle`)
 
+Consulta, no formato da planilha. **Não edita**: clicar (ou Enter) em uma linha abre o pedido.
+
 - Abas por ano (ano do **pedido**; sem data do pedido, vale a data de importação) e contagem por status.
 - Filtros: busca (pedido, cliente, produto, cidade), status, responsável, "Ocultar entregues" e "Mostrar colunas ocultas".
-- **Editar**: clique na célula, digite e tecle Enter (Esc cancela). Status é um seletor. Salva na hora (`PATCH /controle/itens/{item}`).
-  O número do pedido abre o pedido; cliente e número só são editáveis na tela do pedido.
-- Os mesmos campos de controle também estão no formulário de edição do pedido (seção "Controle de produção").
+
+## Editar o controle (tela do pedido)
+
+Na tela do pedido, cada item tem o bloco **Controle de produção** com status, responsável, cidade de entrega e as 8 etapas.
+O botão **Editar controle** abre um modal com esses campos e a data de entrega (`PATCH /controle/itens/{item}`, que só aceita
+esses campos). Os mesmos campos também estão no formulário de edição do pedido (seção "Controle de produção").
+Descrição, quantidade, número e cliente são editados no pedido (formulário ou modais da tela).
 
 ## Exportar para Excel
 
@@ -68,7 +74,7 @@ O cabeçalho fica congelado (melhoria sobre o modelo).
 ## Como estender
 
 - **Nova coluna de controle**: migration em `pedido_itens`, chave em `PedidoItem::CAMPOS_CONTROLE` (e `ETAPAS`, se for etapa),
-  coluna em `ColunasControle::lista()`, `ControleLinhaResource`, tipo `LinhaControle`/`Item` em `types/index.ts`
-  e campo em `ItemFormCard.tsx`.
+  coluna em `ColunasControle::lista()`, `ControleLinhaResource`, tipos `LinhaControle`/`Item` em `types/index.ts`,
+  regra em `AtualizarControleItemRequest` e campos em `EditarControleItem.tsx`, `ItemCard.tsx` e `ItemFormCard.tsx`.
 - **Nova cor ou regra**: constantes em `ColunasControle`; a regra do Excel está em `PlanilhaControleExporter::regrasDeCor()`
   e a da tela em `estiloDaLinha()` (`GradeControle.tsx`). Mantenha as duas na mesma ordem de prioridade.

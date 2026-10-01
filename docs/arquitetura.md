@@ -85,7 +85,7 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 | GET | `/pedidos/{pedido}/pdf` | PDF original |
 | DELETE | `/pedidos/{pedido}` | excluir |
 | GET | `/controle` | planilha de controle na web (`Controle/Index`) |
-| PATCH | `/controle/itens/{item}` | salva uma célula da grade |
+| PATCH | `/controle/itens/{item}` | salva o controle de produção de um item (modal da tela do pedido) |
 | GET | `/controle/exportar` (`?ano=`) | baixa o .xlsx (todos os anos ou um) |
 | GET | `/pedidos/{pedido}/exportar` | baixa o .xlsx de um pedido |
 
