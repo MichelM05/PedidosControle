@@ -3,38 +3,41 @@
 namespace App\Services;
 
 use App\Models\Pedido;
-use App\Traits\PdfParsingTrait;
-use Exception;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
+use Throwable;
 
 class PedidoUploadService
 {
-    use PdfParsingTrait;
+    public function __construct(private PdfPedidoParser $parser) {}
 
     /**
-     * @throws Exception
+     * Lê o PDF, guarda o arquivo original e cria o pedido com seus itens.
+     *
+     * @throws Throwable
      */
-    public function processarUpload($arquivo)
+    public function processarUpload(UploadedFile $arquivo): Pedido
     {
-        $texto = (new Parser())->parseFile($arquivo->getRealPath())->getText();
-        $arquivo->store('pdfs');
+        $texto = (new Parser)->parseFile($arquivo->getRealPath())->getText();
+        $extraido = $this->parser->extrair($texto);
+        $caminho = $arquivo->store('pdfs');
 
-        $dados = [
-            'numero'      => $this->extrairNumero($texto),
-            'data_pedido' => $this->extrairData($texto),
-            'cliente'     => $this->extrairCliente($texto),
-            'fornecedor'  => $this->extrairFornecedor($texto),
-            'valor'       => $this->extrairValorTotal($texto),
-            'texto_bruto' => $texto,
-        ];
+        try {
+            return DB::transaction(function () use ($extraido, $texto, $caminho) {
+                $pedido = Pedido::create($extraido['pedido'] + [
+                    'texto_bruto' => $texto,
+                    'arquivo_pdf' => $caminho,
+                    'dados_extras' => $extraido['dados_extras'],
+                ]);
+                $pedido->itens()->createMany($extraido['itens']);
 
-        return DB::transaction(function () use ($dados, $texto) {
-            $pedido = Pedido::create($dados);
-            $itens = $this->extrairItensDoTexto($texto);
-            $pedido->itens()->createMany($itens);
-
-            return $pedido;
-        });
+                return $pedido;
+            });
+        } catch (Throwable $e) {
+            Storage::delete($caminho); // não deixa PDF órfão se o banco falhar
+            throw $e;
+        }
     }
 }
