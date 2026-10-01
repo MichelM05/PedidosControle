@@ -13,7 +13,19 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'PDFs Transformers'),
+    'name' => env('APP_NAME', 'PedidosControle'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cadastro aberto
+    |--------------------------------------------------------------------------
+    |
+    | Permite criar a própria conta na tela de login. Com REGISTRO_ABERTO=false
+    | só administradores criam usuários (tela Usuários).
+    |
+    */
+
+    'registro_aberto' => (bool) env('REGISTRO_ABERTO', true),
 
     /*
     |--------------------------------------------------------------------------

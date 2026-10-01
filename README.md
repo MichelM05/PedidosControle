@@ -1,4 +1,4 @@
-# PDF Transformer — Importador de Pedidos
+# PedidosControle — controle de pedidos
 
 Aplicação **Laravel + React** (Inertia, TypeScript, Tailwind e shadcn/ui) que **importa pedidos de compra / prestação de serviço em PDF**, extrai os dados
 (cabeçalho, endereços, condições, itens e impostos) e mostra tudo de forma organizada para o usuário
@@ -31,6 +31,7 @@ cd src && npm install && npm run build             # 5. front React (rode de nov
 
 ## Como usar
 
+0. Abra o sistema e, na tela de login, use **Criar conta** (a primeira conta criada vira administradora; veja [docs/autenticacao.md](docs/autenticacao.md)). Depois é só **Entrar**. Administradores gerenciam usuários em **Usuários**.
 1. Na tela inicial, escolha o PDF e clique em **Processar PDF** (ou **Criar pedido manual**).
 2. Na tela do pedido confira os dados. Use **Abrir PDF original** para comparar lado a lado.
 3. Corrija o que for preciso: **Editar** em cada seção (modal) ou **Editar** no topo (itens).
@@ -61,7 +62,7 @@ src/
 │   ├── Http/Controllers/PedidoController.php   # fino: recebe a requisição, delega e devolve uma página Inertia
 │   ├── Http/Requests/                          # validação (BaseRequest + um por ação)
 │   ├── Http/Resources/                         # Pedido/PedidoItem → JSON enviado ao React
-│   ├── Http/Middleware/HandleInertiaRequests   # props globais (mensagem de sucesso)
+│   ├── Http/Middleware/                        # HandleInertiaRequests (props globais), ApenasAdministradores, BloquearUsuarioInativo
 │   ├── Services/
 │   │   ├── PdfPedidoParser.php                 # texto do PDF → dados estruturados
 │   │   ├── PedidoUploadService.php             # upload: lê, guarda o PDF e cria o pedido
@@ -84,6 +85,7 @@ docs/                                           # documentação detalhada
 
 - [docs/arquitetura.md](docs/arquitetura.md) — camadas, fluxo do upload, banco de dados e rotas
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
+- [docs/autenticacao.md](docs/autenticacao.md) — login, criar conta, perfil, usuários e como fechar o cadastro
 - [docs/controle-planilha.md](docs/controle-planilha.md) — a planilha de controle: colunas, cores, tela e exportação
 - [docs/interface.md](docs/interface.md) — front React: páginas, componentes, paleta e como estender
 
@@ -94,4 +96,4 @@ docs/                                           # documentação detalhada
   Só é preciso `--build` ao mudar o `Dockerfile`.
 - O Xdebug vem ativo na imagem (`start_with_request=yes`). Se notar lentidão e não estiver depurando,
   mude para `trigger` no `Dockerfile`.
-- Ainda não há login: qualquer pessoa com acesso à URL vê e edita os pedidos.
+- Todo usuário logado vê e edita todos os pedidos (só a tela Usuários é restrita a administradores). Com o cadastro aberto, quem alcança a URL pode criar conta: feche com `REGISTRO_ABERTO=false` se o sistema for exposto.

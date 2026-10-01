@@ -1,21 +1,45 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ControleController;
 use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PedidoController::class, 'index'])->name('pedidos.index');
+// Login (só para quem ainda não entrou)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+    Route::post('/registro', [LoginController::class, 'registrar'])->name('registro.store');
+});
 
-Route::post('/upload', [PedidoController::class, 'upload'])->name('pedidos.upload');
+// Tudo o mais exige usuário logado
+Route::middleware(['auth', 'ativo'])->group(function () {
+    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
-Route::get('/pedidos/{pedido}/pdf', [PedidoController::class, 'pdf'])->name('pedidos.pdf');
+    // Meu perfil
+    Route::get('/perfil', [PerfilController::class, 'edit'])->name('perfil.edit');
+    Route::patch('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
+    Route::put('/perfil/senha', [PerfilController::class, 'senha'])->name('perfil.senha');
 
-Route::patch('/pedidos/{pedido}/dados', [PedidoController::class, 'atualizarDados'])->name('pedidos.dados');
+    // Usuários (administradores)
+    Route::middleware('admin')->group(function () {
+        Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+        Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
+        Route::patch('/usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
+    });
 
-Route::resource('pedidos', PedidoController::class)->except(['index']);
+    // Pedidos
+    Route::get('/', [PedidoController::class, 'index'])->name('pedidos.index');
+    Route::post('/upload', [PedidoController::class, 'upload'])->name('pedidos.upload');
+    Route::get('/pedidos/{pedido}/pdf', [PedidoController::class, 'pdf'])->name('pedidos.pdf');
+    Route::patch('/pedidos/{pedido}/dados', [PedidoController::class, 'atualizarDados'])->name('pedidos.dados');
+    Route::resource('pedidos', PedidoController::class)->except(['index']);
 
-// Controle de pedidos (planilha): grade por ano, edição por célula e exportação .xlsx
-Route::get('/controle', [ControleController::class, 'index'])->name('controle.index');
-Route::get('/controle/exportar', [ControleController::class, 'exportar'])->name('controle.exportar');
-Route::patch('/controle/itens/{item}', [ControleController::class, 'atualizar'])->name('controle.atualizar');
-Route::get('/pedidos/{pedido}/exportar', [ControleController::class, 'exportarPedido'])->name('pedidos.exportar');
+    // Controle de pedidos (planilha): grade por ano, edição do controle do item, status e exportação .xlsx
+    Route::get('/controle', [ControleController::class, 'index'])->name('controle.index');
+    Route::get('/controle/exportar', [ControleController::class, 'exportar'])->name('controle.exportar');
+    Route::patch('/controle/itens/{item}', [ControleController::class, 'atualizar'])->name('controle.atualizar');
+    Route::patch('/pedidos/{pedido}/status', [ControleController::class, 'atualizarStatusPedido'])->name('pedidos.status');
+});

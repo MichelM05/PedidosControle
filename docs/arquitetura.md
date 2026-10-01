@@ -76,6 +76,9 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 
 | Método | URL | Ação |
 |--------|-----|------|
+| GET/POST | `/login`, POST `/logout` | entrar e sair (veja [autenticacao.md](autenticacao.md)); todas as rotas abaixo exigem login |
+| GET/PATCH/PUT | `/perfil`, `/perfil/senha` | o usuário troca nome, e-mail e senha |
+| GET/POST/PATCH | `/usuarios` | gestão de usuários (administradores) |
 | GET | `/` | lista com filtros e paginação (`Pedidos/Index`) |
 | POST | `/upload` | importa um PDF |
 | GET | `/pedidos/create`, POST `/pedidos` | criar manualmente |
@@ -87,7 +90,7 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 | GET | `/controle` | planilha de controle na web (`Controle/Index`) |
 | PATCH | `/controle/itens/{item}` | salva o controle de produção de um item (modal da tela do pedido) |
 | GET | `/controle/exportar` (`?ano=`) | baixa o .xlsx (todos os anos ou um) |
-| GET | `/pedidos/{pedido}/exportar` | baixa o .xlsx de um pedido |
+| PATCH | `/pedidos/{pedido}/status` | muda o status de todos os itens do pedido |
 
 ## Decisões de desempenho
 
