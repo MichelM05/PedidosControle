@@ -19,7 +19,7 @@ export default function ExcluirPedido({ pedido, variant = 'outline' }: { pedido:
             <Button
                 variant={variant}
                 size={variant === 'outline' ? 'sm' : 'default'}
-                className={variant === 'outline' ? 'hover:border-destructive hover:bg-destructive hover:text-white' : undefined}
+                className={variant === 'outline' ? 'hover:border-red-800 hover:bg-red-800 hover:text-white' : undefined}
             >
                 Excluir
             </Button>

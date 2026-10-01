@@ -33,7 +33,7 @@ export default function ConfirmDialog({ children, title, description, confirmLab
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={onConfirm}>
+                    <AlertDialogAction className="bg-destructive text-white hover:bg-red-800" onClick={onConfirm}>
                         {confirmLabel}
                     </AlertDialogAction>
                 </AlertDialogFooter>

@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Modo escuro só com a classe .dark (não segue o tema do sistema): a paleta do app é clara. */
+@custom-variant dark (&:is(.dark *));
+
 /* Paleta: base neutra (zinc) com acentos pontuais. Troque as cores só aqui. */
 :root {
     --background: #f4f4f5;
@@ -15,9 +18,9 @@
     --secondary-foreground: #27272a;
     --muted: #fafafa;
     --muted-foreground: #71717a;
-    --accent: #f4f4f5;
+    --accent: #d4d4d8;
     --accent-foreground: #27272a;
-    --destructive: #a63a0b;
+    --destructive: #b91c1c;
     --border: #e4e4e7;
     --input: #e4e4e7;
     --ring: #ff9d2e;
