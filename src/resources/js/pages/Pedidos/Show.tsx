@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import { useState } from 'react';
 
 import EditarSecao, { type Secao } from '@/components/pedidos/EditarSecao';
+import EditarControleItem from '@/components/pedidos/EditarControleItem';
 import ExcluirPedido from '@/components/pedidos/ExcluirPedido';
 import ItemCard from '@/components/pedidos/ItemCard';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout';
 import * as f from '@/lib/format';
 import { rotas } from '@/lib/routes';
-import type { BlocoChave, Pedido, Rotulos } from '@/types';
+import type { BlocoChave, Item, Pedido, Rotulos } from '@/types';
 
 const Rotulo = ({ children }: { children: React.ReactNode }) => (
     <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-muted-foreground">{children}</span>
@@ -22,8 +23,9 @@ const BotaoEditar = ({ onClick, claro }: { onClick: () => void; claro?: boolean 
     </Button>
 );
 
-export default function Show({ pedido, rotulos }: { pedido: Pedido; rotulos: Rotulos }) {
+export default function Show({ pedido, rotulos, status }: { pedido: Pedido; rotulos: Rotulos; status: Record<string, string> }) {
     const [secao, setSecao] = useState<Secao | null>(null);
+    const [itemControle, setItemControle] = useState<Item | null>(null);
     const extras = pedido.dados_extras ?? {};
     const blocos = extras.blocos ?? {};
     const itens = pedido.itens ?? [];
@@ -172,7 +174,7 @@ export default function Show({ pedido, rotulos }: { pedido: Pedido; rotulos: Rot
                     ) : (
                         <div className="grid gap-4">
                             {itens.map((item, i) => (
-                                <ItemCard key={item.id ?? i} item={item} posicao={i + 1} />
+                                <ItemCard key={item.id ?? i} item={item} posicao={i + 1} status={status} onEditarControle={() => setItemControle(item)} />
                             ))}
                         </div>
                     )}
@@ -186,6 +188,7 @@ export default function Show({ pedido, rotulos }: { pedido: Pedido; rotulos: Rot
                 </CardContent>
             </Card>
 
+            {itemControle && <EditarControleItem key={itemControle.id} item={itemControle} status={status} onClose={() => setItemControle(null)} />}
             {secao && <EditarSecao key={secao} secao={secao} pedido={pedido} rotulos={rotulos} onClose={() => setSecao(null)} />}
         </AppLayout>
     );

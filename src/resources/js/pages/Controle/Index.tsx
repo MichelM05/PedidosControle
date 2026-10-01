@@ -25,13 +25,9 @@ interface Props {
 const selectClasse = 'h-9 rounded-md border bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
 export default function Index({ ano, anos, filtros, linhas, totais, colunas, status, responsaveis, diasAlerta, cores }: Props) {
-    const [rows, setRows] = useState(linhas);
     const [busca, setBusca] = useState(filtros.q ?? '');
     const [mostrarOcultas, setMostrarOcultas] = useState(false);
-    const [erro, setErro] = useState<string | null>(null);
     const primeira = useRef(true);
-
-    useEffect(() => setRows(linhas), [linhas]);
 
     const filtrar = (novos: Record<string, unknown>) => {
         const params: Record<string, unknown> = { ano, q: busca, status: filtros.status, responsavel: filtros.responsavel, ocultar_entregues: filtros.ocultar_entregues ? 1 : undefined, ...novos };
@@ -49,24 +45,6 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [busca]);
 
-    const salvar = (linha: LinhaControle, campo: string, valor: string | null) => {
-        setErro(null);
-        setRows((atual) => atual.map((l) => (l.id === linha.id ? { ...l, [campo]: campo === 'qtd' && valor !== null ? Number(valor) : valor } : l)));
-        router.patch(
-            rotas.controleItem(linha.id),
-            { campo, valor },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: ['linhas', 'totais', 'responsaveis'],
-                onError: (erros) => {
-                    setErro(Object.values(erros)[0] ?? 'Não foi possível salvar a alteração.');
-                    router.reload({ only: ['linhas'] });
-                },
-            },
-        );
-    };
-
     return (
         <AppLayout largura="max-w-none">
             <Head title="Controle de pedidos" />
@@ -74,7 +52,7 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-extrabold">Controle de pedidos</h1>
-                    <p className="text-sm text-muted-foreground">Um item por linha, como na planilha. Clique em uma célula para editar.</p>
+                    <p className="text-sm text-muted-foreground">Um item por linha, como na planilha. Clique em uma linha para abrir o pedido e editar o controle.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline">
@@ -141,13 +119,7 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
                 </label>
             </div>
 
-            {erro && (
-                <div role="alert" className="mb-3 rounded-lg border border-l-4 border-l-destructive bg-card px-4 py-2 text-sm text-destructive">
-                    {erro}
-                </div>
-            )}
-
-            <GradeControle linhas={rows} colunas={colunas} status={status} cores={cores} diasAlerta={diasAlerta} mostrarOcultas={mostrarOcultas} onSalvar={salvar} />
+            <GradeControle linhas={linhas} colunas={colunas} status={status} cores={cores} diasAlerta={diasAlerta} mostrarOcultas={mostrarOcultas} />
 
             {/* Legenda das cores das linhas */}
             <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">

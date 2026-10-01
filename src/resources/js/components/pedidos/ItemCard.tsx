@@ -1,4 +1,6 @@
+import { ETAPAS } from '@/components/pedidos/EditarControleItem';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import * as f from '@/lib/format';
 import type { Item } from '@/types';
 
@@ -10,7 +12,7 @@ const Dado = ({ rotulo, children }: { rotulo: string; children: React.ReactNode 
 );
 
 /** Um item do pedido: valores, impostos e dados do serviço/entrega. */
-export default function ItemCard({ item, posicao }: { item: Item; posicao: number }) {
+export default function ItemCard({ item, posicao, status, onEditarControle }: { item: Item; posicao: number; status: Record<string, string>; onEditarControle: () => void }) {
     const divergente =
         item.qtd !== null && item.preco !== null && item.vlr_tot !== null && Math.abs(Number(item.qtd) * Number(item.preco) - Number(item.vlr_tot)) >= 0.01;
 
@@ -33,8 +35,7 @@ export default function ItemCard({ item, posicao }: { item: Item; posicao: numbe
                     <Badge className="bg-sage text-zinc-900 uppercase">Item {item.item ?? posicao}</Badge>
                     {item.status && (
                         <Badge variant="outline" className="ml-2 uppercase">
-                            {item.status}
-                            {item.responsavel ? ` · ${item.responsavel}` : ''}
+                            {status[item.status] ?? item.status}
                         </Badge>
                     )}
                     <div className="mt-1 font-bold">{f.texto(item.denominacao)}</div>
@@ -61,6 +62,25 @@ export default function ItemCard({ item, posicao }: { item: Item; posicao: numbe
                 <Dado rotulo="Local da prestação">{f.texto(item.local_prestacao)}</Dado>
                 <Dado rotulo="Tipo de manutenção">{f.texto(item.tipo_manutencao)}</Dado>
                 <Dado rotulo="Item lei">{f.texto(item.item_lei)}</Dado>
+            </div>
+
+            <div className="mt-3 rounded-lg border p-4 text-sm">
+                <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[0.7rem] font-bold uppercase tracking-wide text-muted-foreground">Controle de produção</span>
+                    <Button type="button" variant="outline" size="sm" onClick={onEditarControle}>
+                        Editar controle
+                    </Button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <Dado rotulo="Status">{f.texto(status[item.status ?? ''] ?? item.status)}</Dado>
+                    <Dado rotulo="Responsável">{f.texto(item.responsavel)}</Dado>
+                    <Dado rotulo="Cidade entrega">{f.texto(item.cidade_entrega)}</Dado>
+                    {Object.entries(ETAPAS).map(([chave, rotulo]) => (
+                        <Dado key={chave} rotulo={rotulo}>
+                            {f.texto(item[chave as keyof Item] as string | null)}
+                        </Dado>
+                    ))}
+                </div>
             </div>
         </div>
     );

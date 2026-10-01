@@ -1,7 +1,7 @@
-import { Link } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 
-import Celula from '@/components/controle/Celula';
 import { rotas } from '@/lib/routes';
+import * as f from '@/lib/format';
 import type { ColunaControle, LinhaControle } from '@/types';
 
 interface Cores {
@@ -18,7 +18,6 @@ interface Props {
     cores: Cores;
     diasAlerta: number;
     mostrarOcultas: boolean;
-    onSalvar: (linha: LinhaControle, campo: string, valor: string | null) => void;
 }
 
 /** Largura em pixels a partir da largura de coluna do Excel. */
@@ -40,9 +39,23 @@ function estiloDaLinha(linha: LinhaControle, cores: Cores, diasAlerta: number): 
     return { background: `#${cores.linha}`, riscado: false };
 }
 
-/** Grade no formato da planilha CONTROLE DE PEDIDOS: mesmas colunas, grupos de cor e regras de cor por linha. */
-export default function GradeControle({ linhas, colunas, status, cores, diasAlerta, mostrarOcultas, onSalvar }: Props) {
+/** Texto de uma célula, formatado como na planilha. */
+function texto(linha: LinhaControle, coluna: ColunaControle, status: Record<string, string>): string {
+    const valor = linha[coluna.chave];
+    if (valor === null || valor === undefined || valor === '' || coluna.chave === 'pedido') return '';
+    if (coluna.tipo === 'data') return f.data(String(valor));
+    if (coluna.tipo === 'numero') return f.quantidade(valor);
+    if (coluna.tipo === 'status') return (status[String(valor)] ?? String(valor)).toUpperCase();
+    return String(valor);
+}
+
+/**
+ * Grade no formato da planilha CONTROLE DE PEDIDOS: mesmas colunas, grupos de cor e regras de cor por linha.
+ * Somente leitura: clicar em uma linha abre o pedido, onde o controle é editado.
+ */
+export default function GradeControle({ linhas, colunas, status, cores, diasAlerta, mostrarOcultas }: Props) {
     const visiveis = colunas.filter((c) => mostrarOcultas || !c.oculta);
+    const abrir = (linha: LinhaControle) => router.visit(rotas.ver(linha.pedido_id));
 
     return (
         <div className="max-h-[70vh] overflow-auto rounded-lg border border-zinc-400 bg-white">
@@ -77,16 +90,18 @@ export default function GradeControle({ linhas, colunas, status, cores, diasAler
                         const { background, riscado } = estiloDaLinha(linha, cores, diasAlerta);
 
                         return (
-                            <tr key={linha.id} style={{ background }} className={riscado ? 'line-through' : undefined}>
+                            <tr
+                                key={linha.id}
+                                style={{ background }}
+                                tabIndex={0}
+                                title="Abrir o pedido"
+                                onClick={() => abrir(linha)}
+                                onKeyDown={(e) => e.key === 'Enter' && abrir(linha)}
+                                className={`cursor-pointer outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${riscado ? 'line-through' : ''}`}
+                            >
                                 {visiveis.map((c) => (
-                                    <td key={c.chave} className="border border-zinc-500 p-0 align-middle">
-                                        {c.chave === 'numero' ? (
-                                            <Link href={rotas.ver(linha.pedido_id)} className="block px-1 py-0.5 text-center underline-offset-2 hover:underline" title="Abrir o pedido">
-                                                {linha.numero ?? '—'}
-                                            </Link>
-                                        ) : (
-                                            <Celula linha={linha} coluna={c} status={status} onSalvar={(campo, valor) => onSalvar(linha, campo, valor)} />
-                                        )}
+                                    <td key={c.chave} className={`min-h-6 border border-zinc-500 px-1 py-1 align-middle whitespace-pre-wrap ${c.alinha === 'left' ? 'text-left' : 'text-center'}`}>
+                                        {texto(linha, c, status)}
                                     </td>
                                 ))}
                             </tr>
