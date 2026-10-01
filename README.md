@@ -1,6 +1,6 @@
 # PDF Transformer — Importador de Pedidos
 
-Aplicação Laravel que **importa pedidos de compra / prestação de serviço em PDF**, extrai os dados
+Aplicação **Laravel + React** (Inertia, TypeScript, Tailwind e shadcn/ui) que **importa pedidos de compra / prestação de serviço em PDF**, extrai os dados
 (cabeçalho, endereços, condições, itens e impostos) e mostra tudo de forma organizada para o usuário
 **conferir e corrigir**.
 
@@ -11,7 +11,7 @@ Aplicação Laravel que **importa pedidos de compra / prestação de serviço em
 
 ## Subir o projeto
 
-Requisitos: Docker + Docker Compose e Node.js (só para compilar CSS/JS).
+Requisitos: Docker + Docker Compose e Node.js 20+ (para compilar o front React).
 
 ```bash
 cp src/.env.example src/.env                       # 1. ambiente (já configurado para o Docker)
@@ -19,7 +19,7 @@ docker compose up -d --build                       # 2. app + PostgreSQL + pgAdm
 docker compose exec app composer install           # 3. dependências PHP (primeira vez)
 docker compose exec app php artisan key:generate   #    (primeira vez)
 docker compose exec app php artisan migrate        # 4. tabelas
-cd src && npm install && npm run build             # 5. CSS/JS (rode de novo ao mudar resources/css ou resources/js)
+cd src && npm install && npm run build             # 5. front React (rode de novo ao mudar resources/js ou resources/css)
 ```
 
 | Serviço    | Endereço                | Observação                                  |
@@ -42,6 +42,8 @@ docker compose exec app php artisan test              # testes automatizados
 docker compose exec app vendor/bin/pint               # padroniza o estilo do código PHP
 docker compose exec app php artisan pedidos:reextrair # reaplica o parser em pedidos já importados
 docker compose logs -f app                            # logs
+cd src && npm run dev                                 # front com recarregamento automático (em vez de build)
+cd src && npm run typecheck                           # confere os tipos TypeScript
 docker compose down                                   # parar tudo (os dados do banco ficam no volume)
 ```
 
@@ -53,18 +55,22 @@ docker compose down                                   # parar tudo (os dados do 
 ```
 src/
 ├── app/
-│   ├── Http/Controllers/PedidoController.php   # fino: recebe a requisição e delega
+│   ├── Http/Controllers/PedidoController.php   # fino: recebe a requisição, delega e devolve uma página Inertia
 │   ├── Http/Requests/                          # validação (BaseRequest + um por ação)
+│   ├── Http/Resources/                         # Pedido/PedidoItem → JSON enviado ao React
+│   ├── Http/Middleware/HandleInertiaRequests   # props globais (mensagem de sucesso)
 │   ├── Services/
 │   │   ├── PdfPedidoParser.php                 # texto do PDF → dados estruturados
 │   │   ├── PedidoUploadService.php             # upload: lê, guarda o PDF e cria o pedido
 │   │   └── PedidoService.php                   # salvar pedido/itens e editar por seção
 │   ├── Models/ (Pedido, PedidoItem)            # constantes BLOCOS, CONDICOES, CAMPOS_EXTRAS
-│   ├── Helpers/Formatar.php                    # formatação pt-BR para as views
 │   └── Console/Commands/ReextrairDadosPedidos.php
-├── resources/{views,css,js}                    # interface (Blade + CSS/JS puros)
+├── resources/
+│   ├── views/app.blade.php                     # única view Blade (casca da aplicação React)
+│   ├── css/app.css                             # Tailwind + paleta
+│   └── js/                                     # React: pages/, components/, layouts/, lib/, types/
 ├── routes/web.php
-└── tests/                                      # Unit (parser) e Feature (CRUD, edição, busca)
+└── tests/                                      # Unit (parser) e Feature (CRUD, edição, busca, props Inertia)
 docs/                                           # documentação detalhada
 ```
 
@@ -72,11 +78,11 @@ docs/                                           # documentação detalhada
 
 - [docs/arquitetura.md](docs/arquitetura.md) — camadas, fluxo do upload, banco de dados e rotas
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
-- [docs/interface.md](docs/interface.md) — paleta, CSS/JS por tela e componentes reutilizáveis
+- [docs/interface.md](docs/interface.md) — front React: páginas, componentes, paleta e como estender
 
 ## Observações
 
-- O `docker-compose.yml` monta `./src` como volume: alterações no PHP valem na hora, sem rebuild.
+- O `docker-compose.yml` monta `./src` como volume: alterações no PHP valem na hora, sem rebuild. No front, rode `npm run dev` (ou `npm run build`).
   Só é preciso `--build` ao mudar o `Dockerfile`.
 - O Xdebug vem ativo na imagem (`start_with_request=yes`). Se notar lentidão e não estiver depurando,
   mude para `trigger` no `Dockerfile`.

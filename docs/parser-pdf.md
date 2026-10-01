@@ -35,15 +35,15 @@ Valores `==>` e `Base de Cálculo INSS` usam ponto decimal (`1.50`); os demais u
 
 **Novo campo no cabeçalho** (ex.: "Centro de custo"):
 1. Em `extrairDadosExtras()`, adicione a chave com um `$pega('/regex/')`.
-2. Se for um campo simples, inclua em `Pedido::CONDICOES` (chave => rótulo): ele aparece na tela
-   e no modal de edição automaticamente. Para validar, adicione a regra em `AtualizarDadosPedidoRequest`.
+2. Se for um campo simples, inclua em `Pedido::CONDICOES` (chave => rótulo) e em `DadosExtras` (`types/index.ts`):
+   ele aparece na tela e no modal de edição automaticamente. Para validar, adicione a regra em `AtualizarDadosPedidoRequest`.
 3. Escreva um teste em `tests/Unit/PdfPedidoParserTest.php` com um trecho real do PDF.
 
 **Novo campo por item**:
 1. Crie a coluna (migration) e inclua em `PedidoItem::CAMPOS_EXTRAS` (já entra em `$fillable`).
 2. Reconheça a linha em `extrairMetadadoItem()`.
-3. Mostre em `partials/detalhes/item.blade.php` e `partials/item-form.blade.php`;
-   adicione a regra em `SavePedidoRequest`.
+3. Adicione o campo em `types/index.ts` (interface `Item`), mostre em `components/pedidos/ItemCard.tsx`
+   e inclua na lista `SECOES` de `components/pedidos/ItemFormCard.tsx`; adicione a regra em `SavePedidoRequest`.
 
 **Novo modelo de PDF**: ajuste as regexes (ex.: `extrairNumero`) para aceitar o novo texto e adicione um teste.
 

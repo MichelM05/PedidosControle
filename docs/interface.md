@@ -1,48 +1,56 @@
-# Interface
+# Interface (front React)
 
-Blade + CSS/JS puros, compilados pelo Vite (`npm run build`; em desenvolvimento, `npm run dev`).
+React 19 + TypeScript, ligado ao Laravel pelo **Inertia**. Estilo com **Tailwind CSS 4** e componentes **shadcn/ui**
+(Radix). Compilado pelo Vite: `npm run build` (confere os tipos e gera `public/build`) ou `npm run dev`.
 
-## Paleta e tokens
+## Estrutura
 
-Definidos no `:root` de `resources/css/app.css`; troque as cores só ali.
+```
+resources/js/
+├── app.tsx                    # inicia o Inertia e carrega as páginas
+├── pages/Pedidos/             # uma página por tela: Index, Show, Form (criar e editar)
+├── components/
+│   ├── ui/                    # shadcn (button, card, dialog, table...) — gerados, evite editar
+│   ├── pedidos/               # componentes do domínio: UploadCard, Filtros, ItemCard, ItemFormCard, EditarSecao, ExcluirPedido
+│   ├── Field.tsx              # rótulo + campo + erro (padrão de todos os formulários)
+│   ├── ConfirmDialog.tsx      # modal de confirmação
+│   └── Paginacao.tsx
+├── layouts/AppLayout.tsx      # barra superior + mensagem de sucesso
+├── lib/format.ts              # formatação pt-BR (moeda, data, cnpj...) — devolve "—" quando vazio
+├── lib/routes.ts              # URLs da aplicação (espelham routes/web.php)
+└── types/index.ts             # tipos Pedido, Item, DadosExtras, Paginador...
+```
 
-- **Base neutra** (`--tone-50` … `--tone-900`): fundo, cards, bordas e textos.
-- **Destaques**, usados com moderação: laranja `#F56218` (linha do topo, botão "Processar PDF", borda dos itens do formulário),
-  laranja claro `#FF9D2E` (valor total, foco dos campos), verde-sálvia `#9DC9AC` (badge do item, alerta de sucesso).
-  `--cream` (`#FFFEC7`) e `--olive` (`#919167`) estão definidos, mas ainda sem uso.
-- **Semânticas**: `--bg`, `--surface`, `--border`, `--text`, `--muted`, `--accent` (botão primário), `--danger`
-  (exclusão e erros), `--radius*` e `--shadow*`.
+O nome da página (`Pedidos/Show`) é o que o controller passa a `Inertia::render` e corresponde ao arquivo em `pages/`.
+O título da aba vem de `<Head title="...">` em cada página.
 
-## CSS e JS por tela
+## Paleta
 
-| Arquivo | Carregado em | Conteúdo |
-|---------|--------------|----------|
-| `css/app.css` | todas | tokens, layout, botões, formulários, tabela, alertas, modal, paginação |
-| `css/upload.css`, `js/upload.js` | lista | card de upload do PDF |
-| `css/pedidos/show.css` | detalhes | resumo, partes, condições, itens, conferência, botões de edição |
-| `css/pedidos/form.css`, `js/pedidos/form.js` | criar/editar | cards de item (adicionar, remover, minimizar) |
-| `js/ui.js` | todas | modal de confirmação, modais de edição, bloqueio de envio duplicado |
+Definida em `resources/css/app.css` (variáveis do shadcn); troque as cores só ali.
 
-Cada tela declara seus arquivos com `@push('styles')` / `@push('scripts')` e todos precisam estar em `vite.config.js`.
+- **Base neutra** (zinc): fundo, cards, bordas e textos. `--primary` é o grafite dos botões e faixas.
+- **Destaques**, com moderação: laranja `--brand` `#F56218` (linha do topo, "Processar PDF", borda dos itens do formulário),
+  laranja claro `--brand-light` (valor total) e verde-sálvia `--sage` (badge do item, alerta de sucesso).
+- `--destructive` (`#A63A0B`) para exclusão e erros; `--ring` (laranja claro) no foco dos campos.
+- Use sempre as classes semânticas (`bg-primary`, `text-muted-foreground`, `border-border`...), nunca hexadecimal solto.
 
-## Componentes reutilizáveis
+## Telas
 
-- **Confirmação** — qualquer `<form data-confirm="mensagem" data-confirm-title="..." data-confirm-button="...">` abre o modal
-  único do layout antes de enviar. Para exclusões use `<x-delete-button :action="..." :message="..." />`.
-- **Modais de edição** — `<button data-open-modal="edit-xyz">` abre `<dialog id="edit-xyz">`; `data-close-modal` fecha;
-  `data-auto-open` reabre após erro de validação. Gerados em `partials/editar-dados.blade.php`.
-- **`Formatar`** (`app/Helpers/Formatar.php`) — `moeda`, `numero`, `preco`, `quantidade`, `data`, `cnpj`, `texto`.
-  Sempre devolvem `—` quando não há valor. Nas views, importe com `@use('App\Helpers\Formatar')` (cada partial precisa do seu).
-- **Paginação** — `resources/views/pagination/default.blade.php`, definida como padrão no `AppServiceProvider`.
-- **Alertas** — sucesso e erros de validação são exibidos pelo layout; não é preciso repetir nas telas.
+- **Index** — `UploadCard` (envia o PDF), `Filtros` (GET com os filtros), tabela e `Paginacao`.
+- **Show** — resumo, 4 blocos de endereço, condições, observações, conferência de totais (só aparece se divergir),
+  itens (`ItemCard`) e texto extraído. Cada seção tem "Editar", que abre `EditarSecao` (modal com `PATCH /pedidos/{id}/dados`).
+- **Form** — criar e editar com os itens (`ItemFormCard`: adicionar, remover e minimizar). Itens são opcionais.
 
-## Tela de detalhes (`partials/pedido-card` + `partials/detalhes/`)
+## Como estender
 
-`resumo` · `partes` (4 blocos de endereço) · `condicoes` (condições + observações) · `conferencia`
-(só aparece se o total do PDF diferir da soma dos itens) · `item`. Os modais ficam em `editar-dados`.
+- **Nova tela**: crie `pages/<Pasta>/<Nome>.tsx`, a rota e um `Inertia::render('<Pasta>/<Nome>', props)` no controller.
+- **Novo componente shadcn**: `npx shadcn@latest add <nome>` (usa o `components.json`).
+- **Nova seção editável no modal**: acrescente os campos em `campos()` e os valores iniciais em `valoresIniciais()` (`EditarSecao.tsx`)
+  e trate a seção em `PedidoService::atualizarSecao()` e `AtualizarDadosPedidoRequest`.
+- **Confirmação de ação destrutiva**: envolva o botão em `<ConfirmDialog ... onConfirm={...}>` (exemplo: `ExcluirPedido`).
 
 ## Convenções
 
-- Textos em português, só a primeira letra maiúscula nos botões e rótulos ("Salvar alterações").
-- Botões: `.btn` + `.btn-primary` (ação principal), `.btn-secondary`, `.btn-danger` (destrutivo), `.btn-actions` (tabela).
-- Cores sempre por variável, nunca hexadecimal solto no CSS ou na view.
+- Textos em português; só a primeira letra maiúscula em botões e rótulos ("Salvar alterações").
+- Botões: `variant="default"` (ação principal), `outline` (secundário), `destructive` (excluir).
+- Formatação de valores sempre por `lib/format.ts`; nunca `toLocaleString` solto nas telas.

@@ -1,17 +1,20 @@
 # Arquitetura
 
-Laravel 12 + PostgreSQL. Interface em Blade com CSS e JavaScript puros (sem framework JS), compilados pelo Vite.
+Laravel 12 + PostgreSQL no back; **React 19 + TypeScript** no front, ligados pelo **Inertia**: o Laravel continua
+dono das rotas, validação e sessão, e cada ação do controller devolve uma página React com suas props
+(sem API REST separada). O Vite compila o front.
 
 ## Camadas
 
 | Camada | Onde | Responsabilidade |
 |--------|------|------------------|
 | Rotas | `routes/web.php` | `Route::resource` + upload, PDF original e edição por seção |
-| Controller | `PedidoController` | Só recebe a requisição, chama um service e devolve a resposta |
+| Controller | `PedidoController` | Só recebe a requisição, chama um service e devolve `Inertia::render(...)` ou um redirect |
 | Requests | `app/Http/Requests` | Validação e mensagens em português. Todos herdam de `BaseRequest` |
 | Services | `app/Services` | Regras de negócio (veja abaixo) |
 | Models | `Pedido`, `PedidoItem` | Relacionamentos, casts, busca (`scopeSearch`) e constantes compartilhadas |
-| Views | `resources/views` | Blade; formatação sempre via `Formatar` |
+| Resources | `app/Http/Resources` | Transformam `Pedido`/`PedidoItem` no JSON enviado ao React (campos pesados só quando carregados) |
+| Front | `resources/js` | Páginas e componentes React (veja [interface.md](interface.md)); formatação em `lib/format.ts` |
 
 ### Services
 
@@ -22,6 +25,14 @@ Laravel 12 + PostgreSQL. Interface em Blade com CSS e JavaScript puros (sem fram
   - `salvar()`: grava o pedido e **substitui** os itens pelos enviados (aceita zero itens).
   - `atualizarSecao()`: edição dos modais (`resumo`, `condicoes`, `observacoes` ou um bloco de endereço)
     sem tocar nos itens. Mantém cliente/fornecedor coerentes com o nome dos blocos Faturamento/Fornecedor.
+
+## Como o Inertia liga back e front
+
+- `GET` → o controller devolve `Inertia::render('Pedidos/Show', [...props])`; o React renderiza `resources/js/pages/Pedidos/Show.tsx`.
+- Formulários usam `useForm` e enviam por `POST/PUT/PATCH/DELETE`; o Laravel valida e responde com `redirect()`,
+  e os erros voltam em `errors` (campos de itens como `itens.0.qtd`).
+- A mensagem de sucesso (`->with('success', ...)`) chega em `flash.success` (`HandleInertiaRequests`).
+- Só existe uma view Blade, `resources/views/app.blade.php`.
 
 ## Fluxo do upload
 
@@ -63,7 +74,7 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 
 | Método | URL | Ação |
 |--------|-----|------|
-| GET | `/` | lista com filtros e paginação |
+| GET | `/` | lista com filtros e paginação (`Pedidos/Index`) |
 | POST | `/upload` | importa um PDF |
 | GET | `/pedidos/create`, POST `/pedidos` | criar manualmente |
 | GET | `/pedidos/{pedido}` | detalhes |
@@ -76,9 +87,9 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 
 - A lista seleciona só as colunas que exibe e usa `withCount('itens')`: não carrega `texto_bruto` nem os itens.
 - A busca por número, cliente e fornecedor usa `LIKE`; com muitos pedidos, considere índices.
-- Sem axios no front: o JavaScript carregado em todas as telas tem ~1 KB.
+- O front compilado tem ~460 KB (145 KB gzip), todas as páginas num único arquivo: adequado para um app interno desse tamanho.
 
 ## Testes
 
 `php artisan test` roda em SQLite em memória. Cobrem o parser, o CRUD, a edição por seção, a validação,
-a busca/paginação e a presença da confirmação de exclusão.
+a busca/paginação, as props enviadas ao React (`assertInertia`) e a mensagem de sucesso compartilhada.
