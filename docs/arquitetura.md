@@ -21,6 +21,7 @@ dono das rotas, validação e sessão, e cada ação do controller devolve uma p
 - **`PdfPedidoParser`** — recebe o texto do PDF e devolve `['pedido', 'itens', 'dados_extras']`. Não toca no banco.
 - **`PedidoUploadService`** — lê o PDF (smalot/pdfparser), guarda o arquivo em `storage/app/private/pdfs`,
   chama o parser e cria pedido + itens numa transação. Se o banco falhar, apaga o PDF guardado.
+- **`ControleService`** / **`PlanilhaControleExporter`** — consultas e geração do `.xlsx` da planilha de controle (veja [controle-planilha.md](controle-planilha.md)).
 - **`PedidoService`**
   - `salvar()`: grava o pedido e **substitui** os itens pelos enviados (aceita zero itens).
   - `atualizarSecao()`: edição dos modais (`resumo`, `condicoes`, `observacoes` ou um bloco de endereço)
@@ -50,8 +51,9 @@ PDF ──► UploadPedidoRequest (PDF, até 10 MB)
 
 **`pedido_itens`** (`pedido_id`, apaga em cascata): `item`, `material`, `denominacao`, `qtd`, `un`, `preco`,
 `vlr_tot`, `icms`, `ipi` e os campos extras `dt_entrega`, `item_lei`, `tipo_manutencao`, `local_prestacao`,
-`desconto_absoluto`, `icms_monofasico`, `reducao_base_icms`, `base_inss`
-(lista única em `PedidoItem::CAMPOS_EXTRAS`).
+`desconto_absoluto`, `icms_monofasico`, `reducao_base_icms`, `base_inss`, `cidade_entrega`
+(lista única em `PedidoItem::CAMPOS_EXTRAS`) e o **controle de produção** preenchido pela equipe (`PedidoItem::CAMPOS_CONTROLE`):
+`desenho_nesting`, `compra_mp`, `compra_insumo`, `usinagem`, `corte_dobra`, `solda`, `pintura`, `montagem`, `responsavel` e `status`.
 
 **`dados_extras`** guarda o cabeçalho do PDF que não precisa de coluna própria (não é filtrado nem ordenado):
 
@@ -82,6 +84,10 @@ Chaves e rótulos ficam em `Pedido::CONDICOES` e `Pedido::BLOCOS`; views, modais
 | PATCH | `/pedidos/{pedido}/dados` | edição por seção (modais) |
 | GET | `/pedidos/{pedido}/pdf` | PDF original |
 | DELETE | `/pedidos/{pedido}` | excluir |
+| GET | `/controle` | planilha de controle na web (`Controle/Index`) |
+| PATCH | `/controle/itens/{item}` | salva uma célula da grade |
+| GET | `/controle/exportar` (`?ano=`) | baixa o .xlsx (todos os anos ou um) |
+| GET | `/pedidos/{pedido}/exportar` | baixa o .xlsx de um pedido |
 
 ## Decisões de desempenho
 

@@ -6,6 +6,7 @@ Aplicação **Laravel + React** (Inertia, TypeScript, Tailwind e shadcn/ui) que 
 
 - Envie um PDF → o sistema lê o texto, cria o pedido e guarda o PDF original.
 - A tela de detalhes mostra o que foi extraído, avisa quando os totais não batem e abre o PDF original.
+- A tela **Controle** reproduz a planilha CONTROLE DE PEDIDOS (um item por linha, abas por ano, mesmas colunas e cores), editável na própria grade, e **exporta para Excel** no mesmo formato.
 - Cabeçalho e blocos de endereço são editáveis por **modais** na própria tela; os itens, pelo formulário.
 - Pedidos também podem ser criados manualmente.
 
@@ -34,6 +35,7 @@ cd src && npm install && npm run build             # 5. front React (rode de nov
 2. Na tela do pedido confira os dados. Use **Abrir PDF original** para comparar lado a lado.
 3. Corrija o que for preciso: **Editar** em cada seção (modal) ou **Editar** no topo (itens).
 4. Na lista, filtre por número, cliente, fornecedor, data e valor.
+5. Em **Controle**, acompanhe a produção item a item (etapas, responsável e status) e use **Exportar** para gerar a planilha. Detalhes em [docs/controle-planilha.md](docs/controle-planilha.md).
 
 ## Comandos úteis
 
@@ -63,8 +65,11 @@ src/
 │   ├── Services/
 │   │   ├── PdfPedidoParser.php                 # texto do PDF → dados estruturados
 │   │   ├── PedidoUploadService.php             # upload: lê, guarda o PDF e cria o pedido
+│   │   ├── ControleService.php                 # consultas da planilha de controle (por ano, filtros)
+│   │   ├── PlanilhaControleExporter.php        # gera o .xlsx no formato da planilha
 │   │   └── PedidoService.php                   # salvar pedido/itens e editar por seção
-│   ├── Models/ (Pedido, PedidoItem)            # constantes BLOCOS, CONDICOES, CAMPOS_EXTRAS
+│   ├── Support/ColunasControle.php             # colunas, títulos, larguras e cores da planilha
+│   ├── Models/ (Pedido, PedidoItem)            # constantes BLOCOS, CONDICOES, CAMPOS_EXTRAS, CAMPOS_CONTROLE
 │   └── Console/Commands/ReextrairDadosPedidos.php
 ├── resources/
 │   ├── views/app.blade.php                     # única view Blade (casca da aplicação React)
@@ -79,10 +84,12 @@ docs/                                           # documentação detalhada
 
 - [docs/arquitetura.md](docs/arquitetura.md) — camadas, fluxo do upload, banco de dados e rotas
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
+- [docs/controle-planilha.md](docs/controle-planilha.md) — a planilha de controle: colunas, cores, tela e exportação
 - [docs/interface.md](docs/interface.md) — front React: páginas, componentes, paleta e como estender
 
 ## Observações
 
+- A exportação usa PhpSpreadsheet, que precisa da extensão PHP `zip`. Ela está no `Dockerfile` (`libzip-dev` + `docker-php-ext-install zip`): depois de atualizar, rode `docker compose up -d --build` uma vez.
 - O `docker-compose.yml` monta `./src` como volume: alterações no PHP valem na hora, sem rebuild. No front, rode `npm run dev` (ou `npm run build`).
   Só é preciso `--build` ao mudar o `Dockerfile`.
 - O Xdebug vem ativo na imagem (`start_with_request=yes`). Se notar lentidão e não estiver depurando,

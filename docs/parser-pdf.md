@@ -28,6 +28,9 @@ linhas de metadados (`Dt. Entrega`, `Item Lei`, `Tipo de Manutenção`, `Local d
 `Base de Cálculo INSS` e as linhas `==> 0.00 ( Desconto absoluto )`...). O parser associa os
 metadados ao item pela ordem. O `Item Lei` pode quebrar em várias linhas e é unido.
 
+A **cidade de entrega** de cada item é o local da prestação sem a UF ("Ponta Grossa PR" → "Ponta Grossa"). Os campos de controle de produção
+(etapas, responsável e status) **não** vêm do PDF e nunca são alterados pelo parser.
+
 Valores `==>` e `Base de Cálculo INSS` usam ponto decimal (`1.50`); os demais usam o padrão brasileiro
 (`1.234,56`). Os dois casos são tratados.
 
