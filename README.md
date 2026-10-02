@@ -21,7 +21,8 @@ docker compose up -d --build                       # 2. app + PostgreSQL + pgAdm
 docker compose exec app composer install           # 3. dependências PHP (primeira vez)
 docker compose exec app php artisan key:generate   #    (primeira vez)
 docker compose exec app php artisan migrate        # 4. tabelas
-cd src && npm install && npm run build             # 5. front React (rode de novo ao mudar resources/js ou resources/css)
+docker compose exec app php artisan usuarios:criar seu@email.com --nome="Seu Nome" --admin   # 5. primeiro administrador (pergunta a senha)
+cd src && npm install && npm run build             # 6. front React (rode de novo ao mudar resources/js ou resources/css)
 ```
 
 | Serviço    | Endereço                | Observação                                  |
@@ -32,7 +33,7 @@ cd src && npm install && npm run build             # 5. front React (rode de nov
 
 ## Como usar
 
-0. Abra o sistema e, na tela de login, use **Criar conta** (a primeira conta criada vira administradora; veja [docs/autenticacao.md](docs/autenticacao.md)). Depois é só **Entrar**. Administradores gerenciam usuários em **Usuários**.
+0. Entre em **/login** com seu e-mail e senha. Não há cadastro público: as contas são criadas por um administrador na tela **Usuários** (veja [docs/autenticacao.md](docs/autenticacao.md)).
 1. Na tela inicial, escolha o PDF e clique em **Processar PDF** (ou **Criar pedido manual**).
 2. Na tela do pedido confira os dados. Use **Abrir PDF original** para comparar lado a lado.
 3. Corrija o que for preciso: **Editar** em cada seção (modal) ou **Editar** no topo (itens).
@@ -90,7 +91,7 @@ docs/                                           # documentação detalhada
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
 - [docs/historico.md](docs/historico.md) — histórico de alterações: o que é registrado, onde ver e como funciona
 - [docs/seguranca.md](docs/seguranca.md) — o que está protegido, o checklist do servidor e o comando `seguranca:verificar`
-- [docs/autenticacao.md](docs/autenticacao.md) — login, criar conta, perfil, usuários e como fechar o cadastro
+- [docs/autenticacao.md](docs/autenticacao.md) — login, perfil, usuários e como criar o primeiro administrador
 - [docs/controle-planilha.md](docs/controle-planilha.md) — a planilha de controle: colunas, cores, tela e exportação
 - [docs/interface.md](docs/interface.md) — front React: páginas, componentes, paleta e como estender
 
@@ -101,4 +102,4 @@ docs/                                           # documentação detalhada
   Só é preciso `--build` ao mudar o `Dockerfile`.
 - O Xdebug vem ativo na imagem (`start_with_request=yes`). Se notar lentidão e não estiver depurando,
   mude para `trigger` no `Dockerfile`.
-- Todo usuário logado vê e edita todos os pedidos (só a tela Usuários é restrita a administradores). Com o cadastro aberto, quem alcança a URL pode criar conta: feche com `REGISTRO_ABERTO=false` se o sistema for exposto.
+- Todo usuário logado vê e edita todos os pedidos (só a tela Usuários é restrita a administradores).

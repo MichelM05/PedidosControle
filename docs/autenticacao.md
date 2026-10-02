@@ -2,26 +2,24 @@
 
 Todas as telas exigem login (sessão do Laravel). Quem não entrou é enviado para `/login` e, depois de entrar, volta para onde queria ir.
 
-## Criar conta e primeiro acesso
+## Contas e primeiro acesso
 
-Na tela de login há duas abas: **Entrar** e **Criar conta** (nome, e-mail, senha e confirmação). Ao criar, a pessoa já entra no sistema.
+**Não há cadastro público**: a tela de login só tem e-mail e senha, e `/registro` não existe (404). As contas são criadas por um administrador.
 
-- **O primeiro cadastro do sistema vira administrador** (a tela avisa isso enquanto não há contas). Os seguintes são usuários comuns.
-- Administradores também criam e gerenciam contas na tela **Usuários** (menu do topo).
-- Para **fechar o cadastro aberto** (só administradores criam contas), defina `REGISTRO_ABERTO=false` no `src/.env` e rode
-  `docker compose exec app php artisan config:clear`. A aba "Criar conta" some e `POST /registro` devolve 404.
-- Por comando (útil para criar um administrador com o cadastro fechado):
-  `docker compose exec app php artisan usuarios:criar seu@email.com --nome="Seu Nome" --admin` (a senha é perguntada).
-
-> Com o cadastro aberto, **qualquer pessoa que alcance a URL do sistema consegue criar uma conta e ver os pedidos**.
-> Se o sistema for exposto fora da rede da empresa, feche o cadastro depois de criar as contas.
+- **Primeiro administrador:** por comando, no servidor (no Laravel Cloud, na aba **Commands** do ambiente):
+  ```bash
+  docker compose exec app php artisan usuarios:criar seu@email.com --nome="Seu Nome" --admin
+  # a senha é perguntada (mínimo 8 caracteres, com letras e números); também aceita --senha=...
+  ```
+- **Demais usuários:** o administrador entra, clica em **Usuários** (menu do topo) e em **+ Novo usuário**, e informa nome, e-mail e senha inicial.
+  A pessoa pode trocar a senha em **Meu perfil**.
+- Sem `--admin` o comando cria um usuário comum.
 
 ## O que existe
 
 | Tela / rota | Quem acessa | O que faz |
 |---|---|---|
-| `/login` | visitante | abas Entrar (e-mail + senha, "Lembrar-me neste computador") e Criar conta |
-| `POST /registro` | visitante | cria a conta e entra (se `REGISTRO_ABERTO=true`) |
+| `/login` | visitante | e-mail + senha, com "Lembrar-me neste computador" |
 | `POST /logout` ("Sair" no topo) | logado | encerra a sessão |
 | `/perfil` (nome no topo) | logado | troca nome, e-mail e senha (pede a senha atual) |
 | `/usuarios` | **administrador** | lista, cria e edita usuários: nome, e-mail, senha, administrador e ativo |
@@ -40,7 +38,7 @@ Na tela de login há duas abas: **Entrar** e **Criar conta** (nome, e-mail, senh
 - Middlewares: `ApenasAdministradores` (`admin`, devolve 403) e `BloquearUsuarioInativo` (`ativo`); o redirecionamento de visitantes
   e de quem já entrou está em `bootstrap/app.php`.
 - O usuário logado chega ao React em `auth.user` (`HandleInertiaRequests`): `id`, `name`, `email`, `is_admin`.
-- Front: `pages/Auth/Login.tsx` (com `GuestLayout`; abas Entrar/Criar conta), `pages/Perfil/Edit.tsx`, `pages/Usuarios/Index.tsx`; o menu do usuário e o botão Sair
+- Front: `pages/Auth/Login.tsx` (com `GuestLayout`), `pages/Perfil/Edit.tsx`, `pages/Usuarios/Index.tsx`; o menu do usuário e o botão Sair
   estão em `layouts/AppLayout.tsx`.
 - Testes: `tests/Feature/AuthTest.php`. Os demais testes de feature entram com `actingAs(User::factory()->create())`.
 
