@@ -44,6 +44,7 @@ cd src && npm install && npm run build             # 5. front React (rode de nov
 ```bash
 docker compose exec app php artisan test              # testes automatizados
 docker compose exec app vendor/bin/pint               # padroniza o estilo do código PHP
+docker compose exec app php artisan seguranca:verificar # confere as configurações de segurança do ambiente
 docker compose exec app php artisan pedidos:reextrair # reaplica o parser em pedidos já importados
 docker compose logs -f app                            # logs
 cd src && npm run dev                                 # front com recarregamento automático (em vez de build)
@@ -88,7 +89,7 @@ docs/                                           # documentação detalhada
 - [docs/arquitetura.md](docs/arquitetura.md) — camadas, fluxo do upload, banco de dados e rotas
 - [docs/parser-pdf.md](docs/parser-pdf.md) — o que é extraído do PDF e como estender o parser
 - [docs/historico.md](docs/historico.md) — histórico de alterações: o que é registrado, onde ver e como funciona
-- [docs/seguranca.md](docs/seguranca.md) — o que está protegido e o checklist antes de publicar
+- [docs/seguranca.md](docs/seguranca.md) — o que está protegido, o checklist do servidor e o comando `seguranca:verificar`
 - [docs/autenticacao.md](docs/autenticacao.md) — login, criar conta, perfil, usuários e como fechar o cadastro
 - [docs/controle-planilha.md](docs/controle-planilha.md) — a planilha de controle: colunas, cores, tela e exportação
 - [docs/interface.md](docs/interface.md) — front React: páginas, componentes, paleta e como estender
