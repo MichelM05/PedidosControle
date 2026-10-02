@@ -16,7 +16,7 @@ class SalvarUsuarioRequest extends BaseRequest
         return [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario?->id)],
-            'password' => [$usuario ? 'nullable' : 'required', 'string', 'min:8'],
+            'password' => [$usuario ? 'nullable' : 'required', 'string', self::regraSenha()],
             'is_admin' => 'boolean',
             'ativo' => 'boolean',
         ];
@@ -32,6 +32,8 @@ class SalvarUsuarioRequest extends BaseRequest
         return [
             'email.unique' => 'Já existe um usuário com este e-mail.',
             'password.min' => 'A senha deve ter pelo menos :min caracteres.',
+            'password.letters' => 'A senha deve ter pelo menos uma letra.',
+            'password.numbers' => 'A senha deve ter pelo menos um número.',
         ] + parent::messages();
     }
 }

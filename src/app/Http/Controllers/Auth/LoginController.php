@@ -18,7 +18,7 @@ class LoginController extends Controller
     {
         return Inertia::render('Auth/Login', [
             'registroAberto' => config('app.registro_aberto'),
-            'primeiroAcesso' => ! User::exists(), // o primeiro cadastro vira administrador
+            'primeiroAcesso' => config('app.primeiro_cadastro_admin') && ! User::exists(), // o primeiro cadastro vira administrador
         ]);
     }
 
@@ -62,7 +62,7 @@ class LoginController extends Controller
         }
         RateLimiter::hit($chave, 60 * 60);
 
-        $usuario = User::create([...$request->validated(), 'is_admin' => ! User::exists()]);
+        $usuario = User::create([...$request->validated(), 'is_admin' => config('app.primeiro_cadastro_admin') && ! User::exists()]);
 
         Auth::login($usuario);
         $request->session()->regenerate();

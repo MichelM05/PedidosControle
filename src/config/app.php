@@ -28,6 +28,21 @@ return [
     'registro_aberto' => (bool) env('REGISTRO_ABERTO', true),
 
     /*
+    | O primeiro cadastro de um sistema vazio vira administrador. Em produção o padrão é desligado (crie o administrador
+    | pelo comando usuarios:criar --admin), para ninguém "tomar" um sistema recém-instalado.
+    */
+    'primeiro_cadastro_admin' => (bool) env('PRIMEIRO_CADASTRO_ADMIN', env('APP_ENV') !== 'production'),
+
+    /*
+    | Proxies confiáveis (IPs separados por vírgula, ou "*"). Necessário atrás de nginx/Cloudflare/balanceador para o
+    | Laravel enxergar o IP real do cliente (limites de login) e o HTTPS. Não use "*" se o app puder ser acessado sem o proxy.
+    */
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /* Gera todos os links em https e marca o cookie de sessão como seguro. Ligue quando o site for servido só por HTTPS. */
+    'force_https' => (bool) env('FORCE_HTTPS', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

@@ -9,7 +9,7 @@ class RegistroRequest extends BaseRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', self::regraSenha()],
         ];
     }
 
@@ -23,6 +23,8 @@ class RegistroRequest extends BaseRequest
         return [
             'email.unique' => 'Já existe uma conta com este e-mail.',
             'password.min' => 'A senha deve ter pelo menos :min caracteres.',
+            'password.letters' => 'A senha deve ter pelo menos uma letra.',
+            'password.numbers' => 'A senha deve ter pelo menos um número.',
             'password.confirmed' => 'A confirmação da senha não confere.',
         ] + parent::messages();
     }

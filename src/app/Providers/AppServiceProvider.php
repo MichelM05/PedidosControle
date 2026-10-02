@@ -7,7 +7,9 @@ use App\Models\PedidoItem;
 use App\Observers\PedidoItemObserver;
 use App\Observers\PedidoObserver;
 use App\Services\HistoricoService;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         JsonResource::withoutWrapping();
+
+        if ($proxies = config('app.trusted_proxies')) {
+            TrustProxies::at($proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+        if (config('app.force_https')) {
+            URL::forceHttps();
+            config(['session.secure' => true]);
+        }
 
         Pedido::observe(PedidoObserver::class);
         PedidoItem::observe(PedidoItemObserver::class);

@@ -16,6 +16,7 @@ use App\Services\PedidoUploadService;
 use App\Support\ColunasControle;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use InvalidArgumentException;
 use Throwable;
 
 class PedidoController extends Controller
@@ -92,6 +93,7 @@ class PedidoController extends Controller
 
         return Storage::response($pedido->arquivo_pdf, 'pedido-'.($pedido->numero ?? $pedido->id).'.pdf', [
             'Content-Type' => 'application/pdf',
+            'Cache-Control' => 'no-store, private', // dados de clientes: não deixar em cache do navegador/proxy
         ], 'inline');
     }
 
@@ -99,10 +101,12 @@ class PedidoController extends Controller
     {
         try {
             $pedido = $service->processarUpload($request->file('pdf'));
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['pdf' => $e->getMessage()]); // mensagens próprias, seguras para o usuário
         } catch (Throwable $e) {
-            report($e);
+            report($e); // o detalhe técnico vai só para o log, nunca para a tela
 
-            return back()->withErrors(['pdf' => 'Erro ao processar o PDF: '.$e->getMessage()]);
+            return back()->withErrors(['pdf' => 'Não foi possível processar este PDF. Confira se é um pedido válido e tente de novo.']);
         }
 
         return redirect()->route('pedidos.show', $pedido)->with('success', 'Pedido importado!');

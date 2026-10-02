@@ -21,9 +21,9 @@ class CriarUsuario extends Command
         }
 
         $nome = $this->option('nome') ?: $this->ask('Nome');
-        $senha = $this->option('senha') ?: $this->secret('Senha (mínimo 8 caracteres)');
-        if (strlen((string) $senha) < 8) {
-            $this->error('A senha deve ter pelo menos 8 caracteres.');
+        $senha = $this->option('senha') ?: $this->secret('Senha (mínimo 8 caracteres, com letras e números)');
+        if (strlen((string) $senha) < 8 || ! preg_match('/[A-Za-z]/', (string) $senha) || ! preg_match('/\d/', (string) $senha)) {
+            $this->error('A senha deve ter pelo menos 8 caracteres, com letras e números.');
 
             return self::FAILURE;
         }

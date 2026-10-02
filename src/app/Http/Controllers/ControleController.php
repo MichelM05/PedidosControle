@@ -77,6 +77,7 @@ class ControleController extends Controller
 
         return response()->streamDownload(fn () => $escritor->save('php://output'), $arquivo, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'no-store, private',
         ]);
     }
 }
