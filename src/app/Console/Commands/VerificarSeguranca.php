@@ -50,14 +50,11 @@ class VerificarSeguranca extends Command
         config('app.trusted_proxies') === '*' ? $aviso('TRUSTED_PROXIES=*', 'confia em qualquer origem: prefira listar os IPs do proxy') : null;
 
         // Acesso
-        config('app.registro_aberto') ? $aviso('REGISTRO_ABERTO', 'true: qualquer pessoa que alcance o endereço cria uma conta e vê os pedidos. Use false depois de criar as contas') : $ok('Cadastro fechado');
         if (User::where('is_admin', true)->where('ativo', true)->exists()) {
             $ok('Existe um administrador ativo');
         } else {
             $aviso('Administrador', 'nenhum ativo: crie com php artisan usuarios:criar email --admin');
         }
-        config('app.primeiro_cadastro_admin') && ! User::exists() && config('app.registro_aberto')
-            ? $aviso('Primeiro cadastro', 'sistema vazio com cadastro aberto: quem se cadastrar primeiro vira administrador. Crie o admin por comando antes de expor') : null;
 
         // PHP e logs
         ini_get('expose_php') ? $aviso('expose_php', 'On: o PHP anuncia a versão no cabeçalho X-Powered-By. Use expose_php=Off') : $ok('expose_php desligado');

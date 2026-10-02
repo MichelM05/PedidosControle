@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class SegurancaTest extends TestCase
@@ -33,12 +32,6 @@ class SegurancaTest extends TestCase
         $fracas = ['abcdefgh' => 'password.letters', '12345678' => 'password.letters'];
         $semNumero = 'abcdefgh';
         $semLetra = '12345678';
-
-        // cadastro
-        foreach ([$semNumero, $semLetra, 'a1'] as $senha) {
-            $this->post(route('registro.store'), ['name' => 'X', 'email' => 'x@empresa.com', 'password' => $senha, 'password_confirmation' => $senha])->assertSessionHasErrors('password');
-        }
-        $this->assertDatabaseCount('users', 0);
 
         // troca de senha e criação por administrador
         $ana = User::factory()->admin()->create(['password' => 'antiga123']);
@@ -86,23 +79,12 @@ class SegurancaTest extends TestCase
         $this->get(route('controle.exportar'))->assertOk()->assertHeader('Cache-Control', 'no-store, private');
     }
 
-    public function test_primeiro_cadastro_so_vira_admin_se_a_configuracao_permitir(): void
-    {
-        config(['app.primeiro_cadastro_admin' => false]);
-
-        $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('primeiroAcesso', false));
-        $this->post(route('registro.store'), ['name' => 'Ana', 'email' => 'ana@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345']);
-
-        $this->assertFalse(User::firstOrFail()->is_admin);
-    }
-
     public function test_comando_de_verificacao_aponta_problemas_e_aprova_ambiente_seguro(): void
     {
         $this->artisan('seguranca:verificar')->assertFailed(); // ambiente de teste/desenvolvimento
 
         config([
-            'app.env' => 'production', 'app.debug' => false, 'app.url' => 'https://pedidos.exemplo.com', 'app.registro_aberto' => false,
-            'app.trusted_proxies' => '10.0.0.1', 'session.secure' => true, 'database.connections.sqlite.password' => 'x9!Qm2$vL7#kP4wZ',
+            'app.env' => 'production', 'app.debug' => false, 'app.url' => 'https://pedidos.exemplo.com', 'app.trusted_proxies' => '10.0.0.1', 'session.secure' => true, 'database.connections.sqlite.password' => 'x9!Qm2$vL7#kP4wZ',
         ]);
         $this->app['env'] = 'production';
         User::factory()->admin()->create();

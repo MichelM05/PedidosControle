@@ -2,7 +2,6 @@
 export const rotas = {
     historico: '/historico',
     login: '/login',
-    registro: '/registro',
     logout: '/logout',
     perfil: '/perfil',
     perfilSenha: '/perfil/senha',

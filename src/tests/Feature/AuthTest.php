@@ -189,62 +189,6 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_tela_de_login_informa_se_o_cadastro_esta_aberto_e_se_e_o_primeiro_acesso(): void
-    {
-        $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('registroAberto', true)->where('primeiroAcesso', true));
-
-        User::factory()->create();
-        $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('primeiroAcesso', false));
-    }
-
-    public function test_primeiro_cadastro_vira_administrador_e_os_seguintes_sao_usuarios_comuns(): void
-    {
-        $dados = fn (string $nome, string $email) => ['name' => $nome, 'email' => $email, 'password' => 'senha12345', 'password_confirmation' => 'senha12345'];
-
-        $this->post(route('registro.store'), $dados('Ana', 'ana@empresa.com'))->assertRedirect(route('pedidos.index'))->assertSessionHas('success');
-        $this->assertAuthenticated();
-        $this->assertTrue(User::where('email', 'ana@empresa.com')->firstOrFail()->is_admin);
-
-        auth()->logout();
-        $this->post(route('registro.store'), $dados('Bia', 'bia@empresa.com'));
-        $bia = User::where('email', 'bia@empresa.com')->firstOrFail();
-        $this->assertFalse($bia->is_admin);
-        $this->assertTrue($bia->ativo);
-        $this->assertTrue(\Hash::check('senha12345', $bia->password));
-        $this->assertAuthenticatedAs($bia);
-    }
-
-    public function test_cadastro_valida_os_dados(): void
-    {
-        User::factory()->create(['email' => 'ana@empresa.com']);
-
-        $this->post(route('registro.store'), ['name' => '', 'email' => 'invalido', 'password' => '123', 'password_confirmation' => '999'])
-            ->assertSessionHasErrors(['name', 'email', 'password']);
-        $this->post(route('registro.store'), ['name' => 'X', 'email' => 'ana@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345'])
-            ->assertSessionHasErrors(['email' => 'Já existe uma conta com este e-mail.']);
-        $this->post(route('registro.store'), ['name' => 'X', 'email' => 'x@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'diferente1'])
-            ->assertSessionHasErrors(['password' => 'A confirmação da senha não confere.']);
-
-        $this->assertGuest();
-        $this->assertDatabaseCount('users', 1);
-    }
-
-    public function test_cadastro_pode_ser_fechado_pela_configuracao(): void
-    {
-        config(['app.registro_aberto' => false]);
-
-        $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('registroAberto', false));
-        $this->post(route('registro.store'), ['name' => 'X', 'email' => 'x@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345'])->assertNotFound();
-        $this->assertDatabaseCount('users', 0);
-    }
-
-    public function test_quem_ja_entrou_nao_acessa_o_cadastro(): void
-    {
-        $this->actingAs(User::factory()->create())->post(route('registro.store'), ['name' => 'X', 'email' => 'x@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345'])
-            ->assertRedirect('/');
-        $this->assertDatabaseCount('users', 1);
-    }
-
     public function test_login_bloqueia_temporariamente_depois_de_varias_senhas_erradas(): void
     {
         User::factory()->create(['email' => 'ana@empresa.com', 'password' => 'segredo123']);
@@ -283,19 +227,6 @@ class AuthTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_cadastro_tem_limite_por_endereco(): void
-    {
-        foreach (range(1, 10) as $i) {
-            auth()->logout();
-            $this->post(route('registro.store'), ['name' => "U$i", 'email' => "u$i@empresa.com", 'password' => 'senha12345', 'password_confirmation' => 'senha12345']);
-        }
-        auth()->logout();
-
-        $this->post(route('registro.store'), ['name' => 'Extra', 'email' => 'extra@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345'])
-            ->assertSessionHasErrors('email');
-        $this->assertDatabaseMissing('users', ['email' => 'extra@empresa.com']);
-    }
-
     public function test_respostas_trazem_cabecalhos_de_seguranca_e_csp_nas_paginas(): void
     {
         $resposta = $this->get(route('login'));
@@ -314,5 +245,18 @@ class AuthTest extends TestCase
     {
         $this->get(route('login'))->assertHeaderMissing('Strict-Transport-Security');
         $this->get('https://localhost/login')->assertHeader('Strict-Transport-Security');
+    }
+
+    public function test_nao_existe_cadastro_publico_de_contas(): void
+    {
+        $dados = ['name' => 'X', 'email' => 'x@empresa.com', 'password' => 'senha12345', 'password_confirmation' => 'senha12345'];
+
+        foreach (['/registro', '/register', '/cadastro'] as $rota) {
+            $this->get($rota)->assertNotFound();
+            $this->post($rota, $dados)->assertNotFound();
+        }
+
+        $this->assertDatabaseCount('users', 0);
+        $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->component('Auth/Login')->missing('registroAberto')->missing('primeiroAcesso'));
     }
 }
