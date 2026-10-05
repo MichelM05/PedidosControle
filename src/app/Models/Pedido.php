@@ -105,6 +105,6 @@ class Pedido extends Model
 
     public function itens(): HasMany
     {
-        return $this->hasMany(PedidoItem::class, 'pedido_id');
+        return $this->hasMany(PedidoItem::class, 'pedido_id')->orderBy('id'); // ordem fixa: mudar o status/UPDATE não pode reordenar os itens
     }
 }

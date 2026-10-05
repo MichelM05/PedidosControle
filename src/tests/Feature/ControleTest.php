@@ -263,4 +263,29 @@ class ControleTest extends TestCase
 
         $this->post(route('pedidos.store'), ['numero' => '2', 'itens' => [['denominacao' => 'y', 'status' => 'xyz']]])->assertSessionHasErrors('itens.0.status');
     }
+
+    public function test_edita_um_item_pelo_modal_sem_tocar_nos_outros(): void
+    {
+        $pedido = $this->pedido('300', '2026-02-01', [['denominacao' => 'A', 'qtd' => 2], ['denominacao' => 'B', 'qtd' => 5]]);
+        [$a, $b] = $pedido->itens()->orderBy('id')->get();
+
+        $this->patch(route('itens.atualizar', $a), ['denominacao' => 'A novo', 'fabricante' => 'Hoffman', 'observacoes' => 'Ref. 123', 'qtd' => '3', 'status' => 'andamento'])
+            ->assertRedirect(route('pedidos.show', $pedido->id));
+
+        $this->assertSame('A novo', $a->fresh()->denominacao);
+        $this->assertSame('HOFFMAN', $a->fresh()->fabricante);
+        $this->assertSame('Ref. 123', $a->fresh()->observacoes);
+        $this->assertSame('B', $b->fresh()->denominacao);
+
+        $this->patch(route('itens.atualizar', $a), ['qtd' => 'abc'])->assertSessionHasErrors('qtd');
+    }
+
+    public function test_itens_do_pedido_mantem_a_ordem_apos_mudar_o_status(): void
+    {
+        $pedido = $this->pedido('400', '2026-02-01', [['denominacao' => 'A'], ['denominacao' => 'B'], ['denominacao' => 'C']]);
+        $primeiro = $pedido->itens()->first();
+        $primeiro->update(['status' => 'finalizado']);
+
+        $this->assertSame(['A', 'B', 'C'], $pedido->fresh()->itens->pluck('denominacao')->all());
+    }
 }

@@ -20,5 +20,6 @@ export const rotas = {
     statusPedido: (id: number) => `/pedidos/${id}/status`,
     controle: '/controle',
     controleExportar: (ano?: number) => (ano ? `/controle/exportar?ano=${ano}` : '/controle/exportar'),
+    item: (id: number) => `/itens/${id}`,
     controleItem: (id: number) => `/controle/itens/${id}`,
 };

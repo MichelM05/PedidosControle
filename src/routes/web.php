@@ -35,6 +35,7 @@ Route::middleware(['auth', 'ativo'])->group(function () {
     Route::post('/upload', [PedidoController::class, 'upload'])->middleware('throttle:20,1')->name('pedidos.upload');
     Route::get('/pedidos/{pedido}/pdf', [PedidoController::class, 'pdf'])->name('pedidos.pdf');
     Route::patch('/pedidos/{pedido}/dados', [PedidoController::class, 'atualizarDados'])->name('pedidos.dados');
+    Route::patch('/itens/{item}', [PedidoController::class, 'atualizarItem'])->name('itens.atualizar');
     Route::resource('pedidos', PedidoController::class)->except(['index']);
 
     // Histórico de alterações (quem, o quê e quando)

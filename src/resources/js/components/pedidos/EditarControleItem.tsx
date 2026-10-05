@@ -54,7 +54,7 @@ export default function EditarControleItem({ item, status, onClose }: Props) {
                         <Field id="ctl-dt_entrega" label="Data de entrega" type="date" value={form.data.dt_entrega} onChange={(v) => form.setData('dt_entrega', v)} error={form.errors.dt_entrega} />
                         <Field id="ctl-cidade_entrega" label="Cidade entrega" value={form.data.cidade_entrega} onChange={(v) => form.setData('cidade_entrega', v)} error={form.errors.cidade_entrega} />
                         {Object.entries(ETAPAS).map(([chave, rotulo]) => (
-                            <Field key={chave} id={`ctl-${chave}`} label={rotulo} placeholder="data ou texto" value={form.data[chave]} onChange={(v) => form.setData(chave, v)} error={form.errors[chave]} />
+                            <Field key={chave} id={`ctl-${chave}`} label={rotulo} value={form.data[chave]} onChange={(v) => form.setData(chave, v)} error={form.errors[chave]} />
                         ))}
                         <Field id="ctl-responsavel" label="Responsável" value={form.data.responsavel} onChange={(v) => form.setData('responsavel', v)} error={form.errors.responsavel} />
                         <div className="grid gap-1.5">

@@ -38,6 +38,22 @@ class PdfPedidoParser
         ];
     }
 
+    /**
+     * Tira o fabricante do texto de observação do item ("FABRICANTE: X" numa linha ou "Fabricante: X Referência: Y").
+     *
+     * @return array{0: ?string, 1: ?string} [fabricante, observação sem o fabricante]
+     */
+    public static function separarFabricante(?string $obs): array
+    {
+        if ($obs === null || ! preg_match('/(?:^|\n|\s)(?<!PEÇA )(?<!PECA )Fabricante(?:\s+exclusivo)?\s*:\s*(.+?)(?=\s+Refer[êe]ncia\b|\s+Ref\.|\n|$)/iu', $obs, $m, PREG_OFFSET_CAPTURE)) {
+            return [null, $obs];
+        }
+        $fabricante = trim($m[1][0]);
+        $resto = trim(preg_replace('/[ \t]{2,}/', ' ', substr($obs, 0, $m[0][1]).' '.substr($obs, $m[0][1] + strlen($m[0][0]))));
+
+        return [$fabricante !== '' ? $fabricante : null, $resto !== '' ? $resto : null];
+    }
+
     public function extrairNumero(string $texto): ?string
     {
         // Dois modelos: "Pedido de Compra nº123" e "Ped. Prest. Serv. nº123"
@@ -163,6 +179,16 @@ class PdfPedidoParser
                         'material' => $resto,
                         'denominacao' => $resto,
                     ];
+
+                    continue;
+                }
+            }
+
+            // Texto livre abaixo do item (descrição, fabricante, part number...): vira a observação do item
+            if ($itemLines !== [] && count($valueLines) < count($itemLines)) {
+                $ultimo = count($itemLines) - 1;
+                if ($linha !== ($itemLines[$ultimo]['denominacao'] ?? null)) {
+                    $itemLines[$ultimo]['observacoes'] = trim(($itemLines[$ultimo]['observacoes'] ?? '')."\n".$linha);
                 }
             }
         }
@@ -185,6 +211,7 @@ class PdfPedidoParser
         }
 
         foreach ($itens as &$item) {
+            [$item['fabricante'], $item['observacoes']] = self::separarFabricante($item['observacoes'] ?? null);
             $item['cidade_entrega'] ??= $this->cidadeSemUf($item['local_prestacao'] ?? null);
         }
         unset($item);

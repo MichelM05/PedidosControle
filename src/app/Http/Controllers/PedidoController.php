@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AtualizarDadosPedidoRequest;
+use App\Http\Requests\AtualizarItemRequest;
 use App\Http\Requests\SavePedidoRequest;
 use App\Http\Requests\SearchPedidoRequest;
 use App\Http\Requests\UploadPedidoRequest;
@@ -43,6 +44,8 @@ class PedidoController extends Controller
             'pedido' => PedidoResource::make($pedido->load('itens')),
             'rotulos' => ['blocos' => Pedido::BLOCOS, 'condicoes' => Pedido::CONDICOES],
             'status' => PedidoItem::STATUS,
+            'cores' => ColunasControle::cores(),
+            'prazos' => ColunasControle::prazos(),
             'historico' => $this->historico->agrupar(Historico::where('pedido_id', $pedido->id)->latest('id')->limit(80)->get()),
         ]);
     }
@@ -77,6 +80,14 @@ class PedidoController extends Controller
         $this->pedidos->atualizarSecao($pedido, $request->validated('secao'), $request->safe()->except('secao'));
 
         return redirect()->route('pedidos.show', $pedido)->with('success', 'Dados atualizados.');
+    }
+
+    /** Edição de um item pelo modal da tela de detalhes (não mexe nos demais itens). */
+    public function atualizarItem(AtualizarItemRequest $request, PedidoItem $item)
+    {
+        $item->update($request->validated());
+
+        return redirect()->route('pedidos.show', $item->pedido_id)->with('success', 'Item atualizado.');
     }
 
     public function destroy(Pedido $pedido)

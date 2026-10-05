@@ -28,7 +28,7 @@ class HistoricoService
         'preco' => 'Preço unit.', 'vlr_tot' => 'Valor total', 'icms' => 'ICMS (%)', 'ipi' => 'IPI (%)',
         'dt_entrega' => 'Data de entrega', 'item_lei' => 'Item lei', 'tipo_manutencao' => 'Tipo de manutenção',
         'local_prestacao' => 'Local da prestação', 'desconto_absoluto' => 'Desconto absoluto', 'icms_monofasico' => 'ICMS monofásico',
-        'reducao_base_icms' => 'Redução base ICMS', 'base_inss' => 'Base cálculo INSS (%)', 'cidade_entrega' => 'Cidade entrega',
+        'reducao_base_icms' => 'Redução base ICMS', 'base_inss' => 'Base cálculo INSS (%)', 'cidade_entrega' => 'Cidade entrega', 'observacoes' => 'Observações', 'fabricante' => 'Fabricante',
         'responsavel' => 'Responsável', 'status' => 'Status',
     ];
 

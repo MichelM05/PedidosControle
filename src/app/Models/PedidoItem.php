@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,7 +14,7 @@ class PedidoItem extends Model
     public const CAMPOS_EXTRAS = [
         'dt_entrega', 'item_lei', 'tipo_manutencao', 'local_prestacao',
         'desconto_absoluto', 'icms_monofasico', 'reducao_base_icms', 'base_inss',
-        'cidade_entrega',
+        'cidade_entrega', 'observacoes', 'fabricante',
     ];
 
     /** Etapas do controle de produção (chave => rótulo). Valor livre: texto ou data. */
@@ -60,6 +61,12 @@ class PedidoItem extends Model
         'reducao_base_icms' => 'decimal:4',
         'base_inss' => 'decimal:4',
     ];
+
+    /** O fabricante é sempre guardado em caixa alta, qualquer que seja a origem (PDF, formulário ou modal). */
+    protected function fabricante(): Attribute
+    {
+        return Attribute::set(fn (?string $valor) => $valor === null || trim($valor) === '' ? null : mb_strtoupper(trim($valor)));
+    }
 
     public function pedido(): BelongsTo
     {

@@ -16,7 +16,7 @@ type ItemEditavel = Item & { _k: number };
 const ITEM_VAZIO: Item = {
     item: null, material: null, denominacao: null, qtd: null, un: null, preco: null, vlr_tot: null, icms: null, ipi: null,
     dt_entrega: null, item_lei: null, tipo_manutencao: null, local_prestacao: null, desconto_absoluto: null,
-    icms_monofasico: null, reducao_base_icms: null, base_inss: null, cidade_entrega: null,
+    icms_monofasico: null, reducao_base_icms: null, base_inss: null, cidade_entrega: null, observacoes: null, fabricante: null,
     desenho_nesting: null, compra_mp: null, compra_insumo: null, usinagem: null, corte_dobra: null, solda: null,
     pintura: null, montagem: null, responsavel: null, status: 'andamento',
 };
@@ -43,7 +43,7 @@ export default function Form({ pedido, status }: { pedido: Pedido | null; status
         valor: pedido?.valor ?? '',
         itens: (pedido ? (pedido.itens ?? []) : [ITEM_VAZIO]).map((i) => novoItem(i)),
     });
-    const [minimizados, setMinimizados] = useState<Set<number>>(new Set());
+    const [minimizados, setMinimizados] = useState<Set<number>>(() => new Set(existe ? form.data.itens.map((i) => i._k) : [])); // editar um pedido: itens começam minimizados
     const voltar = existe ? rotas.ver(pedido.id) : rotas.index;
     const mensagens = Object.values(form.errors);
 

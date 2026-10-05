@@ -32,6 +32,16 @@ class ReextrairDadosPedidos extends Command
 
                 foreach ($pedido->itens->sortBy('id')->values() as $i => $item) {
                     $novos = $this->apenasVazios($item, array_intersect_key($extraido['itens'][$i] ?? [], array_flip(PedidoItem::CAMPOS_EXTRAS)));
+                    // Título longo de antes da observação existir: encurta, sem tocar em títulos editados à mão
+                    $novoTitulo = $extraido['itens'][$i]['denominacao'] ?? null;
+                    if (isset($novos['observacoes']) && $novoTitulo !== null && $item->denominacao !== $novoTitulo && str_starts_with((string) $item->denominacao, $novoTitulo)) {
+                        $novos['denominacao'] = $novoTitulo;
+                    }
+                    // Fabricante saiu da observação: tira dela o trecho que já virou campo
+                    if (isset($novos['fabricante']) && $item->observacoes !== null && str_contains($item->observacoes, $novos['fabricante'])) {
+                        $novos['observacoes'] = $extraido['itens'][$i]['observacoes'] ?? null;
+                        $item->observacoes = null; // libera para o update gravar (inclusive o null)
+                    }
                     if ($novos) {
                         $item->update($novos);
                     }

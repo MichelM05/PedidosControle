@@ -3,13 +3,16 @@ import { useState } from 'react';
 
 import EditarSecao, { type Secao } from '@/components/pedidos/EditarSecao';
 import ListaHistorico from '@/components/historico/ListaHistorico';
+import EditarItem from '@/components/pedidos/EditarItem';
 import EditarControleItem from '@/components/pedidos/EditarControleItem';
 import ExcluirPedido from '@/components/pedidos/ExcluirPedido';
+import LegendaCores from '@/components/LegendaCores';
 import ItemCard from '@/components/pedidos/ItemCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout';
 import * as f from '@/lib/format';
+import { estiloPorSituacao, type Cores, type Prazos } from '@/lib/controle';
 import { rotas } from '@/lib/routes';
 import type { BlocoChave, GrupoHistorico, Item, Pedido, Rotulos } from '@/types';
 
@@ -23,9 +26,11 @@ const BotaoEditar = ({ onClick, claro }: { onClick: () => void; claro?: boolean 
     </Button>
 );
 
-export default function Show({ pedido, rotulos, status, historico }: { pedido: Pedido; rotulos: Rotulos; status: Record<string, string>; historico: GrupoHistorico[] }) {
+export default function Show({ pedido, rotulos, status, historico, cores, prazos }: { pedido: Pedido; rotulos: Rotulos; status: Record<string, string>; historico: GrupoHistorico[]; cores: Cores; prazos: Prazos }) {
     const [secao, setSecao] = useState<Secao | null>(null);
+    const [minimizados, setMinimizados] = useState<Set<number>>(new Set());
     const [itemControle, setItemControle] = useState<Item | null>(null);
+    const [itemEdicao, setItemEdicao] = useState<number | null>(null);
     const extras = pedido.dados_extras ?? {};
     const blocos = extras.blocos ?? {};
     const itens = pedido.itens ?? [];
@@ -38,6 +43,13 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
     const diferenca = pedido.valor === null ? 0 : Math.abs(soma - Number(pedido.valor));
     const aceita = Math.abs(Number(extras.diferenca_aceita ?? 0) - diferenca) < 0.01 && extras.diferenca_aceita !== undefined;
     const salvarConferencia = (valor: string) => router.patch(rotas.dados(pedido.id), { secao: 'conferencia', diferenca_aceita: valor }, { preserveScroll: true });
+    const alternarItem = (i: number) => setMinimizados((atual) => { const novo = new Set(atual); if (!novo.delete(i)) novo.add(i); return novo; });
+    const todosMinimizados = itens.length > 0 && minimizados.size === itens.length;
+    // Mesma cor da grade de controle (situação e prazo); o item padrão (em andamento, no prazo) fica sem cor
+    const corDoItem = (item: Item) => {
+        const { background } = estiloPorSituacao(item.status, item.dt_entrega, cores, prazos);
+        return background === `#${cores.linha}` ? null : background;
+    };
     const condicoes = Object.entries(rotulos.condicoes).filter(([chave]) => extras[chave as keyof typeof extras]);
 
     return (
@@ -45,7 +57,7 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
             <Head title={`Pedido nº ${pedido.numero ?? pedido.id}`} />
 
             <Card>
-                <CardContent className="grid gap-5">
+                <CardContent className="grid grid-cols-[minmax(0,1fr)] gap-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <Button asChild variant="outline">
                             <Link href={rotas.index}>← Voltar</Link>
@@ -212,13 +224,21 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
                     )}
 
                     {/* Itens */}
-                    <h3 className="font-extrabold text-foreground/80">Itens</h3>
+                    <div className="flex items-center justify-between gap-3">
+                        <h3 className="font-extrabold text-foreground/80">Itens ({itens.length})</h3>
+                        {itens.length > 1 && (
+                            <Button size="sm" variant="outline" onClick={() => setMinimizados(todosMinimizados ? new Set() : new Set(itens.map((_, i) => i)))}>
+                                {todosMinimizados ? 'Expandir todos' : 'Minimizar todos'}
+                            </Button>
+                        )}
+                    </div>
+                    {itens.length > 0 && <LegendaCores cores={cores} prazos={prazos} />}
                     {itens.length === 0 ? (
                         <p className="py-12 text-center font-medium text-muted-foreground">Nenhum item neste pedido.</p>
                     ) : (
-                        <div className="grid gap-4">
+                        <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
                             {itens.map((item, i) => (
-                                <ItemCard key={item.id ?? i} item={item} posicao={i + 1} status={status} onStatus={(novo) => mudarStatusDoItem(item, novo)} onEditarControle={() => setItemControle(item)} />
+                                <ItemCard key={item.id ?? i} item={item} posicao={i + 1} status={status} onStatus={(novo) => mudarStatusDoItem(item, novo)} onEditarControle={() => setItemControle(item)} minimizado={minimizados.has(i)} onAlternar={() => alternarItem(i)} onEditar={() => setItemEdicao(i)} cor={corDoItem(item)} />
                             ))}
                         </div>
                     )}
@@ -242,6 +262,7 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
                 </CardContent>
             </Card>
 
+            {itemEdicao !== null && itens[itemEdicao] && <EditarItem key={itens[itemEdicao].id} item={itens[itemEdicao]} posicao={itemEdicao + 1} status={status} onClose={() => setItemEdicao(null)} />}
             {itemControle && <EditarControleItem key={itemControle.id} item={itemControle} status={status} onClose={() => setItemControle(null)} />}
             {secao && <EditarSecao key={secao} secao={secao} pedido={pedido} rotulos={rotulos} onClose={() => setSecao(null)} />}
         </AppLayout>

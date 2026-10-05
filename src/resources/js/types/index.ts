@@ -45,6 +45,8 @@ export interface Item {
     reducao_base_icms: string | null;
     base_inss: string | null;
     cidade_entrega: string | null;
+    observacoes: string | null;
+    fabricante: string | null;
     // Controle de produção (planilha de controle)
     desenho_nesting: string | null;
     compra_mp: string | null;
