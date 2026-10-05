@@ -32,6 +32,9 @@ class AtualizarDadosPedidoRequest extends BaseRequest
                 'total_ipi' => 'nullable|numeric',
                 'total_produtos' => 'nullable|numeric',
             ],
+            $secao === 'conferencia' => [
+                'diferenca_aceita' => 'nullable|numeric',
+            ],
             $secao === 'observacoes' => [
                 'observacoes' => 'nullable|string|max:5000',
             ],
@@ -45,7 +48,7 @@ class AtualizarDadosPedidoRequest extends BaseRequest
             default => [],
         };
 
-        return ['secao' => 'required|in:resumo,condicoes,observacoes,'.implode(',', array_keys(Pedido::BLOCOS))] + $porSecao;
+        return ['secao' => 'required|in:resumo,condicoes,observacoes,conferencia,'.implode(',', array_keys(Pedido::BLOCOS))] + $porSecao;
     }
 
     public function attributes(): array
@@ -55,7 +58,7 @@ class AtualizarDadosPedidoRequest extends BaseRequest
             'cliente' => 'Cliente', 'fornecedor' => 'Fornecedor', 'frete' => 'Frete',
             'cond_pgto' => 'Condição de pagamento', 'moeda' => 'Moeda', 'comprador' => 'Comprador',
             'contato_nome' => 'Contato', 'contato_email' => 'E-mail', 'total_icms' => 'ICMS total',
-            'total_ipi' => 'IPI total', 'total_produtos' => 'Total dos produtos', 'observacoes' => 'Observações',
+            'total_ipi' => 'IPI total', 'total_produtos' => 'Total dos produtos', 'observacoes' => 'Observações', 'diferenca_aceita' => 'Diferença aceita',
             'nome' => 'Nome', 'endereco' => 'Endereço', 'cnpj' => 'CNPJ', 'ie' => 'IE', 'fone' => 'Fone',
         ];
     }

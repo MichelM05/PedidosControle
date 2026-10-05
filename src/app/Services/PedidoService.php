@@ -74,6 +74,10 @@ class PedidoService
             $this->definirNomeBloco($extras, 'faturamento', $dados['cliente'] ?? null);
         } elseif ($secao === 'condicoes') {
             $extras = [...array_diff_key($extras, $dados), ...$this->semVazios($dados)];
+        } elseif ($secao === 'conferencia') {
+            // Diferença entre o total do PDF e a soma dos itens que o usuário conferiu e aceitou
+            unset($extras['diferenca_aceita']);
+            $extras += $this->semVazios($dados);
         } elseif ($secao === 'observacoes') {
             unset($extras['observacoes']);
             $extras += $this->semVazios($dados);

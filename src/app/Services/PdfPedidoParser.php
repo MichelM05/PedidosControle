@@ -12,7 +12,7 @@ use App\Models\PedidoItem;
 class PdfPedidoParser
 {
     /** Início de uma linha de valores do item: "1 UR 10.778,46 ..." */
-    private const LINHA_VALORES = '/^\d+\s+[A-Z]{2,}\s+[\d\.,]/';
+    private const LINHA_VALORES = '/^[\d\.,]+\s+\p{L}{2,}\s+[\d\.,]/u';
 
     /**
      * Ponto de entrada: tudo que dá para extrair de um texto de PDF.
@@ -21,6 +21,10 @@ class PdfPedidoParser
      */
     public function extrair(string $texto): array
     {
+        if (PdfPedidoLoramParser::reconhece($texto)) {
+            return (new PdfPedidoLoramParser)->extrair($texto);
+        }
+
         return [
             'pedido' => [
                 'numero' => $this->extrairNumero($texto),
@@ -137,9 +141,9 @@ class PdfPedidoParser
             }
 
             // Linha de valores: "1 UR 10.778,46 10.778,46  0,00 %  0,00 %"
-            if (preg_match('/^\s*(\d+)\s+([A-Z]{2,})\s+([\d\.,]+)\s+([\d\.,]+)(?:\s+([\d\.,]+)\s*%?)?(?:\s+([\d\.,]+)\s*%?)?/i', $linha, $v)) {
+            if (preg_match('/^\s*([\d\.,]+)\s+(\p{L}{2,})\s+([\d\.,]+)\s+([\d\.,]+)(?:\s+([\d\.,]+)\s*%?)?(?:\s+([\d\.,]+)\s*%?)?/iu', $linha, $v)) {
                 $valueLines[] = [
-                    'qtd' => $v[1],
+                    'qtd' => UtilsNormalizarNumero::normalizarNumero($v[1]),
                     'un' => $v[2],
                     'preco' => UtilsNormalizarNumero::normalizarNumero($v[3]),
                     'vlr_tot' => UtilsNormalizarNumero::normalizarNumero($v[4]),

@@ -15,7 +15,7 @@ class PedidoUploadService
     /** Limite de texto extraído do PDF (protege o servidor de arquivos gigantes). */
     private const MAX_CARACTERES = 3_000_000;
 
-    public function __construct(private PdfPedidoParser $parser) {}
+    public function __construct(private PdfPedidoParser $parser, private HistoricoService $historico) {}
 
     /**
      * Lê o PDF, guarda o arquivo original e cria o pedido com seus itens.

@@ -136,4 +136,62 @@ TXT;
 
         $this->assertSame('Ponta Grossa', $this->parser->extrairItens($texto)[0]['cidade_entrega']);
     }
+
+    public function test_le_o_modelo_loram_com_itens_em_blocos(): void
+    {
+    $texto = <<<'T'
+Emissão 04/08/26
+PEDIDO DE COMPRA
+Nº  0826-000012
+DADOS CADASTRAIS LORAM:
+RAZÃO SOCIAL LORAM DO BRASIL LTDA
+FILIAL DE FATURAMENTO Loram do Brasil LTDA MG
+CNPJ FATURAMENTO 20.245.901/0002-31
+COMPRADOR Daniela Gora
+DADOS CADASTRAIS FORNECEDOR:
+NOME DO FORNECEDOR Connectrail LTDA
+CONDIÇÃO DE PAGAMENTO 45DDL
+FRETE:                                     Remetente
+ITEM:1
+CÓD. (PN LORAM)163756
+QTD: 4,0000
+DESCRIÇÃO: Suporte De Fixação Do Deck
+PREÇO UNIT: 156,50
+IPI: 0,00
+VALOR TOTAL: 626,00
+DESCRIÇÃO COMPLEMENTAR
+DATA DE ENTREGA  11/09/26
+ITEM:2
+CÓD. (PN LORAM)A80680
+QTD: 2,0000
+DESCRIÇÃO: Suporte Formado
+PREÇO UNIT: 488,50
+VALOR TOTAL: 977,00
+DATA DE ENTREGA  11/09/26
+TOTAL PRODUTOS 1.603,00
+TOTAL GERAL 1.603,00
+T;
+
+        $r = ($this->parser)->extrair($texto);
+
+        $this->assertSame('0826-000012', $r['pedido']['numero']);
+        $this->assertSame('2026-08-04', $r['pedido']['data_pedido']);
+        $this->assertSame('Connectrail LTDA', $r['pedido']['fornecedor']);
+        $this->assertSame('1603.00', $r['pedido']['valor']);
+        $this->assertCount(2, $r['itens']);
+        $this->assertSame('A80680', $r['itens'][1]['material']);
+        $this->assertSame('977.00', $r['itens'][1]['vlr_tot']);
+        $this->assertSame('2026-09-11', $r['itens'][1]['dt_entrega']);
+        $this->assertSame('45DDL', $r['dados_extras']['cond_pgto']);
+    }
+
+    public function test_aceita_quantidade_decimal_e_unidade_acentuada(): void
+    {
+        $r = ($this->parser)->extrair("Item Material Denominação\n0001065629 CARTUCHO\n1.600 PEÇ 12,00 19.200,00    19,50 %     0,00 %\nTOTAIS:");
+
+        $this->assertCount(1, $r['itens']);
+        $this->assertSame('1600', $r['itens'][0]['qtd']);
+        $this->assertSame('PEÇ', $r['itens'][0]['un']);
+        $this->assertSame('19200.00', $r['itens'][0]['vlr_tot']);
+    }
 }

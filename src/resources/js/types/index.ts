@@ -21,6 +21,7 @@ export interface DadosExtras {
     total_ipi?: string;
     total_produtos?: string;
     observacoes?: string;
+    diferenca_aceita?: string;
     blocos?: Partial<Record<BlocoChave, Bloco>>;
 }
 

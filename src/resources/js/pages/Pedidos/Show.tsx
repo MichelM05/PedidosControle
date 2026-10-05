@@ -36,6 +36,8 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
     const mudarStatusDoPedido = (novo: string) => router.patch(rotas.statusPedido(pedido.id), { status: novo }, { preserveScroll: true });
     const mudarStatusDoItem = (item: Item, novo: string) => router.patch(rotas.controleItem(item.id as number), { status: novo }, { preserveScroll: true });
     const diferenca = pedido.valor === null ? 0 : Math.abs(soma - Number(pedido.valor));
+    const aceita = Math.abs(Number(extras.diferenca_aceita ?? 0) - diferenca) < 0.01 && extras.diferenca_aceita !== undefined;
+    const salvarConferencia = (valor: string) => router.patch(rotas.dados(pedido.id), { secao: 'conferencia', diferenca_aceita: valor }, { preserveScroll: true });
     const condicoes = Object.entries(rotulos.condicoes).filter(([chave]) => extras[chave as keyof typeof extras]);
 
     return (
@@ -176,7 +178,7 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
 
                     {/* Conferência: só aparece quando o total do PDF difere da soma dos itens */}
                     {diferenca >= 0.01 && (
-                        <div className="grid items-center gap-3 rounded-xl border border-l-4 border-l-destructive p-4 text-sm md:grid-cols-3">
+                        <div className={`grid items-center gap-3 rounded-xl border border-l-4 p-4 text-sm md:grid-cols-3 ${aceita ? 'border-l-green-600' : 'border-l-destructive'}`}>
                             <div>
                                 <Rotulo>Total do pedido (no PDF)</Rotulo>
                                 {f.moeda(pedido.valor)}
@@ -185,7 +187,27 @@ export default function Show({ pedido, rotulos, status, historico }: { pedido: P
                                 <Rotulo>Soma dos itens</Rotulo>
                                 {f.moeda(soma)}
                             </div>
-                            <div className="font-bold text-destructive md:text-right">⚠ Diferença de {f.moeda(diferenca)} — confira com o PDF.</div>
+                            <div className="grid gap-2 md:justify-items-end">
+                                {aceita ? (
+                                    <div className="font-bold text-green-700 dark:text-green-500">✓ Diferença de {f.moeda(diferenca)} conferida</div>
+                                ) : (
+                                    <div className="font-bold text-destructive">⚠ Diferença de {f.moeda(diferenca)} — confira com o PDF.</div>
+                                )}
+                                <div className="flex flex-wrap gap-2">
+                                    {aceita ? (
+                                        <Button size="sm" variant="outline" onClick={() => salvarConferencia('')}>
+                                            Desfazer
+                                        </Button>
+                                    ) : (
+                                        <Button size="sm" onClick={() => salvarConferencia(diferenca.toFixed(2))}>
+                                            Está ok
+                                        </Button>
+                                    )}
+                                    <Button size="sm" variant="outline" onClick={() => setSecao('resumo')}>
+                                        Editar valor
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     )}
 

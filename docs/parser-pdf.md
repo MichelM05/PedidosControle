@@ -14,6 +14,14 @@ Usa expressões regulares sobre o texto linha a linha. O texto completo fica sal
 
 Os demais campos têm o mesmo formato nos dois.
 
+### Modelo Loram (`OC_…`)
+
+PDF "PEDIDO DE COMPRA" com `DADOS CADASTRAIS LORAM`, lido por `app/Services/PdfPedidoLoramParser.php`
+(o `PdfPedidoParser::extrair()` o escolhe sozinho). Os itens vêm em blocos `ITEM:n` com `CÓD. (PN LORAM)`, `QTD`,
+`DESCRIÇÃO`, `PREÇO UNIT` e `VALOR TOTAL`; o total é o `TOTAL GERAL`. Não há unidade nem ICMS/IPI por item
+(o IPI vai só em `total_ipi`), então o `TOTAL GERAL` pode diferir da soma dos itens: use **Está ok** na conferência.
+A descrição é cortada em 255 caracteres.
+
 ## O que é extraído
 
 **Pedido**: número, data, cliente (nome do bloco *Faturamento*), fornecedor e valor total.
