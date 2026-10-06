@@ -12,7 +12,7 @@ resources/js/
 ├── components/
 │   ├── ui/                    # shadcn (button, card, dialog, table...) — gerados, evite editar
 │   ├── controle/              # GradeControle (a grade da planilha, somente leitura)
-│   ├── pedidos/               # componentes do domínio: UploadCard, Filtros, ItemCard, ItemFormCard, EditarSecao, EditarControleItem, ExcluirPedido
+│   ├── pedidos/               # componentes do domínio: UploadCard, Filtros, ItemCard, ItemFormCard, EditarItem, EditarSecao, EditarControleItem, TituloBloco, ExcluirPedido
 │   ├── Field.tsx              # rótulo + campo + erro (padrão de todos os formulários)
 │   ├── ConfirmDialog.tsx      # modal de confirmação
 │   └── Paginacao.tsx
@@ -49,8 +49,10 @@ Use sempre as classes semânticas (`bg-primary`, `bg-band`, `text-muted-foregrou
 - **Index** — "Importar pedido" (`UploadCard`), `Filtros` (GET com os filtros) e a tabela **Pedidos cadastrados**, com cada linha colorida pela situação/prazo (`lib/controle.ts`) e `LegendaCores`.
 - **Controle** — a planilha na web (somente leitura): abas por ano, filtros, grade (`GradeControle`) e exportação; clicar em uma linha abre o pedido. Veja [controle-planilha.md](controle-planilha.md).
 - **Show** — resumo, 4 blocos de endereço, condições, observações, conferência de totais (só aparece se divergir),
-  itens (`ItemCard`) e texto extraído. Cada seção tem "Editar", que abre `EditarSecao` (modal com `PATCH /pedidos/{id}/dados`).
-- **Form** — criar e editar com os itens (`ItemFormCard`: adicionar, remover e minimizar). Itens são opcionais.
+  itens (`ItemCard`) e texto extraído. Cada item tem faixa lateral e pílula de status na cor da situação (a mesma da grade de controle), material e entrega sempre à vista,
+  observações e controle de produção recolhidos, "Editar item" (modal `EditarItem`, `PATCH /itens/{id}`) e minimizar; há "Minimizar todos". Cada seção tem "Editar", que abre `EditarSecao` (modal com `PATCH /pedidos/{id}/dados`).
+- **Form** — criar e editar com os itens (`ItemFormCard`: adicionar, remover e minimizar; ao editar, todos começam minimizados). Itens são opcionais.
+  Os campos do item (`SecoesDoItem`) seguem a ordem da visualização e são compartilhados com o modal `EditarItem`.
 
 ## Como estender
 

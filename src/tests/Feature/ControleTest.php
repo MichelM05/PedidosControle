@@ -288,4 +288,46 @@ class ControleTest extends TestCase
 
         $this->assertSame(['A', 'B', 'C'], $pedido->fresh()->itens->pluck('denominacao')->all());
     }
+
+    public function test_controle_traz_o_resumo_dos_pedidos_com_contagem_de_todos_os_itens(): void
+    {
+        $this->pedido('500', '2026-02-01', [
+            ['denominacao' => 'A', 'status' => 'finalizado', 'dt_entrega' => '2026-12-01'],
+            ['denominacao' => 'B', 'status' => 'andamento', 'dt_entrega' => '2026-11-10'],
+        ]);
+
+        // Filtrando por finalizado, a linha traz 1 item, mas o resumo do pedido continua com a situação de todos os itens
+        $this->get(route('controle.index', ['status' => 'finalizado']))->assertInertia(fn (Assert $page) => $page
+            ->has('linhas', 1)
+            ->has('pedidos', 1, fn (Assert $p) => $p->where('numero', '500')->where('itens_count', 2)->where('status_geral', 'andamento')
+                ->where('proxima_entrega', '2026-11-10')->where('contagem.finalizado', 1)->where('contagem.andamento', 1)->etc()));
+    }
+
+    public function test_exporta_so_pedidos_com_uma_linha_por_pedido(): void
+    {
+        $this->pedido('100', '2026-02-01', [
+            ['denominacao' => 'a', 'status' => 'andamento', 'dt_entrega' => '2026-12-01', 'cidade_entrega' => 'Curitiba', 'responsavel' => 'Ana'],
+            ['denominacao' => 'b', 'status' => 'finalizado', 'cidade_entrega' => 'Curitiba', 'responsavel' => 'Bia'],
+        ]);
+        $this->pedido('200', '2025-05-01', [['denominacao' => 'c', 'status' => 'entregue']]);
+
+        $resposta = $this->get(route('controle.exportar', ['modo' => 'pedidos']));
+        $resposta->assertOk()->assertDownload('pedidos.xlsx');
+
+        $arquivo = $this->planilha($resposta->streamedContent());
+        $this->assertSame(['2026', '2025'], $arquivo->getSheetNames());
+
+        $aba = $arquivo->getSheetByName('2026');
+        $this->assertSame('O.C CLIENTE', $aba->getCell('A3')->getValue());
+        $this->assertSame(100, $aba->getCell('A4')->getValue());
+        $this->assertSame(2, $aba->getCell('D4')->getValue()); // itens
+        $this->assertSame(1, $aba->getCell('E4')->getValue()); // em andamento
+        $this->assertSame('Curitiba', $aba->getCell('K4')->getValue());
+        $this->assertSame('Ana, Bia', $aba->getCell('L4')->getValue());
+        $this->assertSame('ANDAMENTO', $aba->getCell('M4')->getValue());
+        $this->assertSame('TOTAL', $aba->getCell('A5')->getValue()); // 2026 tem um pedido: a linha seguinte é a de totais
+
+        $this->assertSame('ENTREGUE', $this->planilha($this->get(route('controle.exportar', ['modo' => 'pedidos', 'ano' => 2025]))->streamedContent())
+            ->getSheetByName('2025')->getCell('M4')->getValue());
+    }
 }

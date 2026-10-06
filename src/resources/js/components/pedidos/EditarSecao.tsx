@@ -98,7 +98,7 @@ export default function EditarSecao({ secao, pedido, rotulos, onClose }: Props) 
 
     return (
         <Dialog open onOpenChange={(aberto) => !aberto && onClose()}>
-            <DialogContent className="max-w-xl">
+            <DialogContent className="sm:max-w-2xl">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();

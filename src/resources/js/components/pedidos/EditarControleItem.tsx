@@ -37,7 +37,7 @@ export default function EditarControleItem({ item, status, onClose }: Props) {
 
     return (
         <Dialog open onOpenChange={(aberto) => !aberto && onClose()}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="sm:max-w-3xl">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();

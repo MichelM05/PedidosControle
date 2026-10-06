@@ -147,6 +147,18 @@ export interface LinhaControle {
     [chave: string]: string | number | null;
 }
 
+/** Resumo de um pedido na tela de Controle (agrupa os itens de `LinhaControle`). */
+export interface PedidoControle {
+    id: number;
+    numero: string | null;
+    cliente: string | null;
+    data_pedido: string | null;
+    itens_count: number;
+    status_geral: string;
+    proxima_entrega: string | null;
+    contagem: Record<string, number>;
+}
+
 /** Uma alteração do histórico (um campo alterado, ou a criação/exclusão). */
 export interface RegistroHistorico {
     id: number;

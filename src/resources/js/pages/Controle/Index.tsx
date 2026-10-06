@@ -3,19 +3,22 @@ import { Download } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import GradeControle from '@/components/controle/GradeControle';
+import GradePedidos from '@/components/controle/GradePedidos';
 import LegendaCores from '@/components/LegendaCores';
 import type { Cores, Prazos } from '@/lib/controle';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout';
 import { rotas } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-import type { ColunaControle, LinhaControle } from '@/types';
+import type { ColunaControle, LinhaControle, PedidoControle } from '@/types';
 
 interface Props {
     ano: number;
     anos: number[];
     filtros: { q?: string; status?: string; responsavel?: string; ocultar_entregues?: boolean };
     linhas: LinhaControle[];
+    pedidos: PedidoControle[];
     totais: Record<string, number>;
     colunas: ColunaControle[];
     status: Record<string, string>;
@@ -26,9 +29,11 @@ interface Props {
 
 const selectClasse = 'h-9 rounded-md border bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
-export default function Index({ ano, anos, filtros, linhas, totais, colunas, status, responsaveis, prazos, cores }: Props) {
+export default function Index({ ano, anos, filtros, linhas, pedidos, totais, colunas, status, responsaveis, prazos, cores }: Props) {
     const [busca, setBusca] = useState(filtros.q ?? '');
     const [mostrarOcultas, setMostrarOcultas] = useState(false);
+    const [exportar, setExportar] = useState<'itens' | 'pedidos'>('itens');
+    const [visao, setVisao] = useState<'pedidos' | 'planilha'>('pedidos');
     const primeira = useRef(true);
 
     const filtrar = (novos: Record<string, unknown>) => {
@@ -51,25 +56,32 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
         <AppLayout largura="max-w-none">
             <Head title="Controle de pedidos" />
 
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-extrabold">Controle de pedidos</h1>
-                    <p className="text-sm text-muted-foreground">Um item por linha, como na planilha. Clique em uma linha para abrir o pedido e editar o controle.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button asChild variant="outline">
-                        <a href={rotas.controleExportar(ano)}>
-                            <Download /> Exportar aba {ano}
-                        </a>
-                    </Button>
-                    <Button asChild variant="outline">
-                        <a href={rotas.controleExportar()}>
-                            <Download /> Exportar todos os anos
-                        </a>
-                    </Button>
-                </div>
-            </div>
-
+            <Card>
+                <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <CardTitle className="text-2xl font-extrabold">Controle de pedidos</CardTitle>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {visao === 'pedidos' ? 'Um pedido por linha; expanda para ver os itens. Abra o pedido para editar o controle.' : 'Um item por linha, como na planilha. Clique em uma linha para abrir o pedido e editar o controle.'}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <select aria-label="Conteúdo da exportação" value={exportar} onChange={(e) => setExportar(e.target.value as 'itens' | 'pedidos')} className={selectClasse}>
+                            <option value="itens">Exportar com itens</option>
+                            <option value="pedidos">Exportar só pedidos</option>
+                        </select>
+                        <Button asChild variant="outline">
+                            <a href={rotas.controleExportar(ano, exportar)}>
+                                <Download /> Exportar aba {ano}
+                            </a>
+                        </Button>
+                        <Button asChild variant="outline">
+                            <a href={rotas.controleExportar(undefined, exportar)}>
+                                <Download /> Exportar todos os anos
+                            </a>
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
             {/* Abas por ano, como na planilha */}
             <div className="mb-3 flex flex-wrap gap-1 border-b" role="tablist">
                 {anos.map((a) => (
@@ -115,15 +127,36 @@ export default function Index({ ano, anos, filtros, linhas, totais, colunas, sta
                     <input type="checkbox" checked={!!filtros.ocultar_entregues} onChange={(e) => filtrar({ ocultar_entregues: e.target.checked ? 1 : undefined })} />
                     Ocultar entregues e cancelados
                 </label>
+                <div className="flex overflow-hidden rounded-md border text-sm font-semibold" role="group" aria-label="Visão">
+                    {(['pedidos', 'planilha'] as const).map((v) => (
+                        <button
+                            key={v}
+                            type="button"
+                            aria-pressed={visao === v}
+                            onClick={() => setVisao(v)}
+                            className={cn('px-3 py-1.5', visao === v ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent')}
+                        >
+                            {v === 'pedidos' ? 'Por pedido' : 'Planilha (por item)'}
+                        </button>
+                    ))}
+                </div>
+                {visao === 'planilha' && (
                 <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={mostrarOcultas} onChange={(e) => setMostrarOcultas(e.target.checked)} />
                     Mostrar colunas ocultas (Pedido, Cliente)
                 </label>
+                )}
             </div>
 
-            <GradeControle linhas={linhas} colunas={colunas} status={status} cores={cores} prazos={prazos} mostrarOcultas={mostrarOcultas} />
+            {visao === 'pedidos' ? (
+                <GradePedidos pedidos={pedidos} linhas={linhas} status={status} cores={cores} prazos={prazos} />
+            ) : (
+                <GradeControle linhas={linhas} colunas={colunas} status={status} cores={cores} prazos={prazos} mostrarOcultas={mostrarOcultas} />
+            )}
 
             <LegendaCores cores={cores} prazos={prazos} />
+                </CardContent>
+            </Card>
         </AppLayout>
     );
 }

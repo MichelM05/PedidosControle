@@ -57,6 +57,11 @@ Linhas sem data de entrega não ganham cor de prazo. Entregue passou de azul-aci
 
 Consulta, no formato da planilha. **Não edita**: clicar (ou Enter) em uma linha abre o pedido.
 
+- Duas visões (botão ao lado dos filtros): **Por pedido** (padrão) e **Planilha (por item)**, a grade abaixo. A exportação `.xlsx` é sempre por item.
+- **Por pedido**: uma linha por pedido com número, cliente, quantidade de itens (e quantos em cada status), próxima entrega, cidades, responsáveis e
+  a situação geral, com a cor da lista de pedidos. O botão ▸ (ou clicar na linha) expande os itens de forma resumida: posição, descrição, quantidade,
+  entrega, cidade, responsável e status. Os filtros valem para os itens mostrados ("2 de 5 itens"), mas a situação e as
+  contagens do pedido consideram todos os itens. Os pedidos vêm ordenados pela entrega mais próxima.
 - Abas por ano (ano do **pedido**; sem data do pedido, vale a data de importação) e contagem por status.
 - Filtros: busca (pedido, cliente, produto, cidade), status, responsável, "Ocultar entregues e cancelados" e "Mostrar colunas ocultas".
 
@@ -73,6 +78,11 @@ Descrição, quantidade, número e cliente são editados no pedido (formulário 
 |---|---|---|
 | Controle → "Exportar aba 2026" | itens do ano da aba | `controle-de-pedidos-2026.xlsx` |
 | Controle → "Exportar todos os anos" | uma aba por ano | `controle-de-pedidos.xlsx` |
+
+O seletor ao lado dos botões escolhe o conteúdo: **Exportar com itens** (a planilha acima, um item por linha) ou **Exportar só pedidos**
+(`PlanilhaPedidosExporter`, `?modo=pedidos`): uma linha por pedido, sem os itens, com O.C, cliente, data, quantidade de itens e quantos em cada
+status, valor total, próxima entrega, cidades, responsáveis e status geral. A linha é pintada pela situação geral e pelo prazo da próxima entrega
+(cores fixas, não regras do Excel), há filtro automático e cabeçalho congelado. Arquivos: `pedidos.xlsx` e `pedidos-2026.xlsx`.
 
 O `.xlsx` (`PlanilhaControleExporter`, PhpSpreadsheet) segue o modelo: título "CONTROLE PEDIDOS" em F1 e a data em Q1,
 cabeçalho com as mesmas cores e larguras, colunas A e B ocultas, linhas em cinza com bordas, zoom de 85% e sem linhas de grade,

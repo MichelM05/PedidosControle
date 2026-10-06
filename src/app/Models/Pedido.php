@@ -103,6 +103,21 @@ class Pedido extends Model
         return $query;
     }
 
+    /**
+     * Situação do pedido a partir dos status dos itens: cancelado (todos cancelados), entregue (todos encerrados),
+     * finalizado (nenhum em andamento) ou andamento.
+     */
+    public static function situacaoGeral(int $total, int $cancelados, int $entregues, int $andamento): string
+    {
+        return match (true) {
+            $total === 0 => 'andamento',
+            $cancelados === $total => 'cancelado',
+            $cancelados + $entregues === $total => 'entregue',
+            $andamento === 0 => 'finalizado',
+            default => 'andamento',
+        };
+    }
+
     public function itens(): HasMany
     {
         return $this->hasMany(PedidoItem::class, 'pedido_id')->orderBy('id'); // ordem fixa: mudar o status/UPDATE não pode reordenar os itens

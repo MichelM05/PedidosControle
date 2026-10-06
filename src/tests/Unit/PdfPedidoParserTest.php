@@ -139,7 +139,7 @@ TXT;
 
     public function test_le_o_modelo_loram_com_itens_em_blocos(): void
     {
-    $texto = <<<'T'
+        $texto = <<<'T'
 Emissão 04/08/26
 PEDIDO DE COMPRA
 Nº  0826-000012

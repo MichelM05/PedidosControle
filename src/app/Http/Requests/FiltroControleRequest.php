@@ -15,6 +15,7 @@ class FiltroControleRequest extends BaseRequest
             'status' => ['nullable', Rule::in(array_keys(PedidoItem::STATUS))],
             'responsavel' => 'nullable|string|max:100',
             'ocultar_entregues' => 'nullable|boolean',
+            'modo' => ['nullable', Rule::in(['itens', 'pedidos'])], // exportação: com itens (planilha) ou só pedidos (resumo)
         ];
     }
 }

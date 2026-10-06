@@ -31,7 +31,7 @@ function FormUsuario({ usuario, onClose }: { usuario: Usuario | null; onClose: (
 
     return (
         <Dialog open onOpenChange={(aberto) => !aberto && onClose()}>
-            <DialogContent className="max-w-lg">
+            <DialogContent>
                 <form onSubmit={enviar} className="grid gap-4">
                     <DialogHeader>
                         <DialogTitle>{usuario ? 'Editar usuário' : 'Novo usuário'}</DialogTitle>

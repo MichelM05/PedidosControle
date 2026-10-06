@@ -31,6 +31,12 @@ class ControleService
         return $this->consulta($ano, $filtros)->get();
     }
 
+    /** Pedidos de um ano com os itens carregados (para a exportação resumida, uma linha por pedido). */
+    public function pedidosDoAno(int $ano): Collection
+    {
+        return Pedido::query()->doAno($ano)->whereHas('itens')->with('itens')->orderBy('id')->get();
+    }
+
     /** Responsáveis já usados (para o filtro). */
     public function responsaveis(): Collection
     {

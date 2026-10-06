@@ -91,8 +91,8 @@ class PlanilhaControleExporter
     {
         $aba->getRowDimension(1)->setRowHeight(18.75);
         $aba->getStyle("A1:{$ultimaColuna}1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFFFFF');
-        $aba->getStyle("C1:{$ultimaColuna}1")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
+        $aba->mergeCells('F1:K1'); // o título não invade as células vizinhas
         $aba->setCellValue('F1', 'CONTROLE PEDIDOS');
         $aba->getStyle('F1')->getFont()->setBold(true)->setSize(14);
         $aba->getStyle('F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -196,7 +196,12 @@ class PlanilhaControleExporter
         $estilo->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF'.ColunasControle::COR_LINHA);
         $estilo->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        $aba->getStyle('C'.self::PRIMEIRA_LINHA_DADOS.":{$ultimaColuna}{$ultimaLinha}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $aba->getStyle('C'.self::PRIMEIRA_LINHA_DADOS.":{$ultimaColuna}{$ultimaLinha}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FF9A9A8E');
+        $aba->getStyle($intervalo)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $aba->getStyle('D'.self::PRIMEIRA_LINHA_DADOS.":D{$ultimaLinha}")->getAlignment()->setIndent(1);
+        for ($l = self::PRIMEIRA_LINHA_DADOS; $l <= $ultimaLinha; $l++) {
+            $aba->getRowDimension($l)->setRowHeight(21);
+        }
         $aba->getStyle('D'.self::PRIMEIRA_LINHA_DADOS.":D{$ultimaLinha}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         $aba->getStyle('E'.self::PRIMEIRA_LINHA_DADOS.":F{$ultimaLinha}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
     }

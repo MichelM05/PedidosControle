@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
+
 /**
  * Colunas da planilha CONTROLE DE PEDIDOS (aba do ano): ordem, títulos, larguras e cores.
  * É a única fonte para a exportação .xlsx e para a grade da tela de controle.
@@ -50,7 +53,7 @@ class ColunasControle
             $c('pedido', 'PEDIDO', 'Pedido', 9.85546875, self::COR_BASE, oculta: true),
             $c('cliente', 'CLIENTE', 'Cliente', 10, self::COR_BASE, oculta: true),
             $c('numero', 'O.C CLIENTE', 'O.C Cliente', 19.42578125, self::COR_BASE),
-            $c('denominacao', 'DESCRIÇÃO PRODUTO', 'Descrição produto', 34.7109375, self::COR_BASE, 'left'),
+            $c('denominacao', 'DESCRIÇÃO PRODUTO', 'Descrição produto', 46, self::COR_BASE, 'left'),
             $c('qtd', 'QUANT.', 'Quant.', 10.7109375, self::COR_BASE, tipo: 'numero'),
             $c('dt_entrega', "DATA \nDE \nENTREGA", 'Data de entrega', 17.85546875, self::COR_BASE, tipo: 'data'),
             $c('cidade_entrega', "CIDADE \nENTREGA", 'Cidade entrega', 14.28515625, self::COR_BASE),
@@ -62,7 +65,7 @@ class ColunasControle
             $c('solda', 'SOLDA', 'Solda', 10.85546875, self::COR_PRODUCAO, tipo: 'etapa'),
             $c('pintura', 'PINTURA', 'Pintura', 10.85546875, self::COR_PRODUCAO, tipo: 'etapa'),
             $c('montagem', 'MONTAGEM', 'Montagem', 11.7109375, self::COR_PRODUCAO, tipo: 'etapa'),
-            $c('responsavel', 'RESPONSÁVEL', 'Responsável', 11.140625, self::COR_PRODUCAO),
+            $c('responsavel', 'RESPONSÁVEL', 'Responsável', 15.5, self::COR_PRODUCAO),
             $c('status', 'STATUS', 'Status', 12.140625, self::COR_STATUS, tipo: 'status'),
         ];
     }
@@ -78,6 +81,31 @@ class ColunasControle
             'alerta' => self::COR_ALERTA,
             'urgente' => self::COR_URGENTE,
         ];
+    }
+
+    /** Cor (hex sem #) de uma situação e prazo, na mesma ordem de prioridade da tela (`estiloPorSituacao`) e da planilha. */
+    public static function corDaSituacao(string $status, ?string $entrega, ?CarbonInterface $hoje = null): string
+    {
+        $cor = match ($status) {
+            'cancelado' => self::COR_CANCELADO,
+            'entregue' => self::COR_ENTREGUE,
+            'finalizado' => self::COR_FINALIZADO,
+            default => null,
+        };
+        if ($cor !== null) {
+            return $cor;
+        }
+        if ($entrega) {
+            $dias = ($hoje ?? now())->startOfDay()->diffInDays(Carbon::parse($entrega)->startOfDay(), false);
+            if ($dias <= self::DIAS_URGENTE) {
+                return self::COR_URGENTE;
+            }
+            if ($dias <= self::DIAS_ALERTA) {
+                return self::COR_ALERTA;
+            }
+        }
+
+        return self::COR_LINHA;
     }
 
     /** Dias para a entrega que disparam o amarelo (alerta) e o vermelho (urgente). */

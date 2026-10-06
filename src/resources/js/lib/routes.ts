@@ -19,7 +19,13 @@ export const rotas = {
     excluir: (id: number) => `/pedidos/${id}`,
     statusPedido: (id: number) => `/pedidos/${id}/status`,
     controle: '/controle',
-    controleExportar: (ano?: number) => (ano ? `/controle/exportar?ano=${ano}` : '/controle/exportar'),
+    controleExportar: (ano?: number, modo: 'itens' | 'pedidos' = 'itens') => {
+        const params = new URLSearchParams();
+        if (ano) params.set('ano', String(ano));
+        if (modo === 'pedidos') params.set('modo', 'pedidos');
+        const query = params.toString();
+        return query ? `/controle/exportar?${query}` : '/controle/exportar';
+    },
     item: (id: number) => `/itens/${id}`,
     controleItem: (id: number) => `/controle/itens/${id}`,
 };

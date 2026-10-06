@@ -6,19 +6,22 @@ use App\Http\Requests\AtualizarControleItemRequest;
 use App\Http\Requests\AtualizarStatusPedidoRequest;
 use App\Http\Requests\FiltroControleRequest;
 use App\Http\Resources\ControleLinhaResource;
+use App\Http\Resources\PedidoResource;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Services\ControleService;
 use App\Services\PlanilhaControleExporter;
+use App\Services\PlanilhaPedidosExporter;
 use App\Support\ColunasControle;
 use Inertia\Inertia;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Controle de pedidos em formato de planilha: grade por ano (consulta) e exportação .xlsx. A edição é na tela do pedido. */
 class ControleController extends Controller
 {
-    public function __construct(private ControleService $controle, private PlanilhaControleExporter $exportador) {}
+    public function __construct(private ControleService $controle, private PlanilhaControleExporter $exportador, private PlanilhaPedidosExporter $pedidosExportador) {}
 
     public function index(FiltroControleRequest $request)
     {
@@ -27,12 +30,15 @@ class ControleController extends Controller
         $ano = (int) ($filtros['ano'] ?? $anos->first() ?? now()->year);
 
         $todos = $this->controle->itensDoAno($ano);
+        $itens = $this->controle->itensDoAno($ano, $filtros);
 
         return Inertia::render('Controle/Index', [
             'ano' => $ano,
             'anos' => $anos->contains($ano) ? $anos : $anos->push($ano)->sortDesc()->values(),
             'filtros' => (object) $filtros,
-            'linhas' => ControleLinhaResource::collection($this->controle->itensDoAno($ano, $filtros))->resolve(),
+            'linhas' => ControleLinhaResource::collection($itens)->resolve(),
+            // Resumo de cada pedido com item na tela (situação e contagens usam TODOS os itens do pedido, não só os filtrados)
+            'pedidos' => PedidoResource::collection(Pedido::search()->whereIn('id', $itens->pluck('pedido_id')->unique())->get())->resolve(),
             'totais' => collect(PedidoItem::STATUS)->map(fn ($rotulo, $chave) => $todos->where('status', $chave)->count())->all() + ['todos' => $todos->count()],
             'colunas' => ColunasControle::lista(),
             'status' => PedidoItem::STATUS,
@@ -50,15 +56,24 @@ class ControleController extends Controller
         return redirect()->route('pedidos.show', $item->pedido_id)->with('success', 'Controle do item atualizado.');
     }
 
-    /** Planilha de um ano (?ano=2026) ou de todos os anos, uma aba por ano. */
+    /**
+     * Planilha de um ano (?ano=2026) ou de todos os anos, uma aba por ano. `modo=pedidos` gera o resumo só com os pedidos
+     * (uma linha por pedido); o padrão é a planilha com um item por linha.
+     */
     public function exportar(FiltroControleRequest $request): StreamedResponse
     {
         $ano = $request->validated('ano');
         $anos = $ano ? collect([(int) $ano]) : $this->controle->anos();
 
+        if ($request->validated('modo') === 'pedidos') {
+            $abas = $anos->mapWithKeys(fn (int $a) => [$a => $this->controle->pedidosDoAno($a)])->all();
+
+            return $this->baixar($this->pedidosExportador->gerar($abas), $ano ? "pedidos-$ano.xlsx" : 'pedidos.xlsx');
+        }
+
         $abas = $anos->mapWithKeys(fn (int $a) => [$a => $this->controle->itensDoAno($a)])->all();
 
-        return $this->baixar($abas, $ano ? "controle-de-pedidos-$ano.xlsx" : 'controle-de-pedidos.xlsx');
+        return $this->baixar($this->exportador->gerar($abas), $ano ? "controle-de-pedidos-$ano.xlsx" : 'controle-de-pedidos.xlsx');
     }
 
     /** Muda o status de todos os itens de um pedido de uma vez (ex.: marcar o pedido inteiro como entregue). */
@@ -70,9 +85,9 @@ class ControleController extends Controller
         return back()->with('success', 'Status de todos os itens atualizado.');
     }
 
-    private function baixar(array $abas, string $arquivo): StreamedResponse
+    private function baixar(Spreadsheet $planilha, string $arquivo): StreamedResponse
     {
-        $escritor = new Xlsx($this->exportador->gerar($abas));
+        $escritor = new Xlsx($planilha);
         $escritor->setPreCalculateFormulas(false);
 
         return response()->streamDownload(fn () => $escritor->save('php://output'), $arquivo, [

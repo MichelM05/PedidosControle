@@ -31,7 +31,8 @@ ICMS/IPI/total dos produtos, observações e quatro blocos de endereço
 (fornecedor, faturamento, local, cobrança), cada um com nome, endereço, CNPJ, IE e fone.
 As observações são as linhas entre os totais e o texto contratual padrão.
 
-**Itens**: cada item tem uma linha de valores (`1 UR 984.000,00 984.000,00 0,00 % 0,00 %`) e, abaixo,
+**Itens**: o texto livre abaixo de cada item vira a **observação** do item (recolhida na tela) e o `FABRICANTE: X` vira o campo **fabricante** (sempre em caixa alta,
+garantido por `PedidoItem`); no modelo Loram a descrição é separada em título curto + observação. Cada item tem uma linha de valores (`1 UR 984.000,00 984.000,00 0,00 % 0,00 %`) e, abaixo,
 linhas de metadados (`Dt. Entrega`, `Item Lei`, `Tipo de Manutenção`, `Local da Prestação`,
 `Base de Cálculo INSS` e as linhas `==> 0.00 ( Desconto absoluto )`...). O parser associa os
 metadados ao item pela ordem. O `Item Lei` pode quebrar em várias linhas e é unido.

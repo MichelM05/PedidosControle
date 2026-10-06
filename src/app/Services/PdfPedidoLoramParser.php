@@ -86,8 +86,8 @@ class PdfPedidoLoramParser
             return [mb_strimwidth($descricao, 0, 255, '…'), null];
         }
 
-        $titulo = trim(substr($descricao, 0, $corte), " ;,-");
-        $resto = trim(substr($descricao, $corte), " ;,-");
+        $titulo = trim(substr($descricao, 0, $corte), ' ;,-');
+        $resto = trim(substr($descricao, $corte), ' ;,-');
 
         return [$titulo, $resto !== '' ? $resto : null];
     }
